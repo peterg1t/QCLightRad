@@ -23,6 +23,7 @@ import matplotlib
 import numpy as np
 import cv2
 from skimage.feature import blob_dog, blob_log, blob_doh
+from matplotlib.backends.backend_pdf import PdfPages
 from scipy import signal, misc
 from PIL import Image
 from tqdm import tqdm
@@ -120,10 +121,28 @@ def read_dicom(filename,ioption):
     print("pixel spacing row [mm]=", dx)
     print("pixel spacing col [mm]=", dy)
 
+    plt.figure()
+    plt.imshow(ArrayDicom)
+    plt.show()
 
-    im_profile = ArrayDicom[int(np.shape(ArrayDicom)[0] / 2), :]
-    min_val = np.amin(ArrayDicom)  # normalizing
-    # min_val = np.amin(im_profile)  # normalizing
+    if ioption.startswith(('y', 'yeah', 'yes')):
+        height, width = ArrayDicom.shape
+        ArrayDicom_mod=ArrayDicom[:,width//2-height//2:width//2+height//2]
+    else:
+        ArrayDicom_mod=ArrayDicom
+
+
+    #we take a diagonal profile to avoid phantom artifacts
+    im_profile = ArrayDicom_mod.diagonal()
+
+    # plt.figure()
+    # plt.plot(im_profile)
+    # plt.show()
+
+
+    # im_profile = ArrayDicom[int(np.shape(ArrayDicom)[0] / 2), :]
+    # min_val = np.amin(ArrayDicom)  # normalizing
+    min_val = np.amin(im_profile)  # normalizing
     volume = np.int16(np.subtract(ArrayDicom , min_val))
     volume = volume / np.amax(volume)
 
@@ -260,79 +279,94 @@ def read_dicom(filename,ioption):
 
 
     k=0
-    fig = plt.figure(figsize=(9, 9))
+    fig = plt.figure(figsize=(7, 9))
+    plt.subplots_adjust(hspace=0.35)
+    # plt.subplots_adjust(left=0.12, bottom=0.06, right=0.9, top=0.91, wspace=0.2, hspace=0.32)
     #getting a profile to extract max value to normalize
     print('volume=',np.shape(volume)[0]/2)
 
-    for profile in profiles:
-        value_near,index = find_nearest(profile, 0.5)
-        # plt.figure()
-        # plt.scatter(xdet[k],ydet[k])
-        # plt.imshow(imcirclist[k])
-        # plt.show()
-
-
-
-        if k==0 or k==1 or k==4 or k==5:
-            print(value_near,index)
-            print('k=',k,'ydet=',ydet[k],'index=',index,'delta=',(ydet[k]-index),'px','delta=',
-                  abs((ydet[k]-index)*dy/10)-3.5,'mm','dy=',dy/10)
-            y = np.linspace(0, 0 + (len(profile) * dy *10 ), len(profile), endpoint=False)
-            ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
-            ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-            ax.scatter(xdet[k], ydet[k], marker="P", color="y")
-            ax.set_title('Bib=' + str(k + 1))
-            ax.axhline(index,color="r", linestyle='--')
-            plt.subplots_adjust(hspace=0.75)
-            # plt.figure()
-            # plt.scatter(y,profile)
-            # plt.scatter(index*dy*10,value_near)
-            # plt.axvline((ydet[k]-1)*dy*10)
-            # plt.show()
-        else:
-            print(value_near, index)
-            print('ydet=', xdet[k], 'index=', index, 'delta=', (xdet[k] - index), 'px', 'delta=',
-                  abs((xdet[k] - index) * dx/10)-3.5, 'mm', 'dx=', dx/10)
-            x = np.linspace(0, 0 + (len(profile) * dx* 10), len(profile), endpoint=False)
-            ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
-            ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-            ax.scatter(xdet[k], ydet[k], marker="P", color="y")
-            ax.set_title('Bib=' + str(k + 1))
-            ax.axvline(index,color="r", linestyle='--')
-            plt.subplots_adjust(hspace=0.75)
-            # plt.figure()
-            # plt.scatter(x, profile)
-            # plt.scatter(index * dx*10, value_near)
-            # plt.axvline((xdet[k]-1) * dx*10)
-            # plt.show()
-
-
-        k=k+1
-
-    plt.show()
-
-
-
-
-
-
+    #creating the page to write the results
     dirname = os.path.dirname(filename)
     print(dirname)
+    with PdfPages(dirname + '/' + 'Light-rad_report.pdf') as pdf:
+        Page = plt.figure(figsize=(4, 5))
+        plt.subplots_adjust(hspace=0.35)
+        kk = 0 #counter for data point
+        for profile in profiles:
+            value_near,index = find_nearest(profile, 0.5)
+            # plt.figure()
+            # plt.scatter(xdet[k],ydet[k])
+            # plt.imshow(imcirclist[k])
+            # plt.show()
+
+            if k==0 or k==1 or k==4 or k==5:
+                print(value_near,index)
+                print('k=',k,'ydet=',ydet[k],'index=',index,'delta=',(ydet[k]-index),'px','delta=',
+                      abs((ydet[k]-index)*dy/10)-3.5,'mm','dy=',dy/10)
+
+                txt = str(round(abs((ydet[k]-index)*dy/10)-3.5, 2))
+                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
+                kk = kk + 1
+
+                y = np.linspace(0, 0 + (len(profile) * dy *10 ), len(profile), endpoint=False)
+                ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
+                ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
+                ax.scatter(xdet[k], ydet[k],s=30, marker="P", color="y")
+                ax.set_title('Bib=' + str(k + 1))
+                ax.axhline(index,color="r", linestyle='--')
+                # plt.figure()
+                # plt.scatter(y,profile)
+                # plt.scatter(index*dy*10,value_near)
+                # plt.axvline((ydet[k]-1)*dy*10)
+                # plt.show()
+            else:
+                print(value_near, index)
+                print('ydet=', xdet[k], 'index=', index, 'delta=', (xdet[k] - index), 'px', 'delta=',
+                      abs((xdet[k] - index) * dx/10)-3.5, 'mm', 'dx=', dx/10)
+
+                txt = str(round(abs((xdet[k] - index) * dx/10)-3.5, 2))
+                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
+                kk = kk + 1
+
+                x = np.linspace(0, 0 + (len(profile) * dx* 10), len(profile), endpoint=False)
+                ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
+                ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
+                ax.scatter(xdet[k], ydet[k],s=30, marker="P", color="y")
+                ax.set_title('Bib=' + str(k + 1))
+                ax.axvline(index,color="r", linestyle='--')
+
+                # plt.figure()
+                # plt.scatter(x, profile)
+                # plt.scatter(index * dx*10, value_near)
+                # plt.axvline((xdet[k]-1) * dx*10)
+                # plt.show()
+
+
+            k=k+1
+
+
+        pdf.savefig()
+        plt.show()
+        pdf.savefig(fig)
+
+
+    # Normal mode:
+    print()
+    print("Directory folder.........:", dirname)
+    print("Storage type.....:", dataset.SOPClassUID)
+    print()
+
+    pat_name = dataset.PatientName
+    display_name = pat_name.family_name + ", " + pat_name.given_name
+    print("Patient's name...:", display_name)
+    print("Patient id.......:", dataset.PatientID)
+    print("Modality.........:", dataset.Modality)
+    print("Study Date.......:", dataset.StudyDate)
+    print("Gantry angle......", dataset.GantryAngle)
 
 
 
 
-    print(xdet,ydet)
-
-
-
-
-
-
-
-
-    exit(0)
-    #now that we have detected the bibs we need to find the distance from x,y to the edge of the field defined as the 50%
 
 
 
@@ -384,7 +418,7 @@ try:
 except:
     print('Please enter a valid directory name')
     print("Use the following command to run this script")
-    print("python qc-ICProfile.py \"[filename]\" ")
+    print("python qc-LRCircleDet.py \"[filename]\" ")
 
 
 while True:  # example of infinite loops using try and except to catch only numbers
