@@ -290,8 +290,8 @@ def read_dicom(filename,ioption):
     print(dirname)
     with PdfPages(dirname + '/' + 'Light-rad_report.pdf') as pdf:
         Page = plt.figure(figsize=(4, 5))
-        plt.subplots_adjust(hspace=0.35)
-        kk = 0 #counter for data point
+        Page.text(0.45, 0.9, 'Report',size=18)
+        kk = 0 #counter for data points
         for profile in profiles:
             value_near,index = find_nearest(profile, 0.5)
             # plt.figure()
