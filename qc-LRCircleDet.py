@@ -302,9 +302,9 @@ def read_dicom(filename,ioption):
             if k==0 or k==1 or k==4 or k==5:
                 print(value_near,index)
                 print('k=',k,'ydet=',ydet[k],'index=',index,'delta=',(ydet[k]-index),'px','delta=',
-                      abs((ydet[k]-index)*dy/10)-3.5,'mm','dy=',dy/10)
+                      abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
 
-                txt = str(round(abs((ydet[k]-index)*dy/10)-3.5, 2))
+                txt = str(round(abs((ydet[k]-index)*dy/10)-3, 2))
                 Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
                 kk = kk + 1
 
@@ -322,9 +322,9 @@ def read_dicom(filename,ioption):
             else:
                 print(value_near, index)
                 print('ydet=', xdet[k], 'index=', index, 'delta=', (xdet[k] - index), 'px', 'delta=',
-                      abs((xdet[k] - index) * dx/10)-3.5, 'mm', 'dx=', dx/10)
+                      abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
 
-                txt = str(round(abs((xdet[k] - index) * dx/10)-3.5, 2))
+                txt = str(round(abs((xdet[k] - index) * dx/10)-3, 2))
                 Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
                 kk = kk + 1
 
