@@ -27,6 +27,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from scipy import signal, misc
 from PIL import Image
 from tqdm import tqdm
+import argparse
 # matplotlib.use('Qt5Agg')
 
 
@@ -41,29 +42,18 @@ def point_detect(imcirclist):
     k = 0
     detCenterXRegion = []
     detCenterYRegion = []
-    # fig = plt.figure(figsize=(9, 9))
 
     print('Finding bibs in phantom...')
     for img in tqdm(imcirclist):
-        grey_img = np.array(img, dtype=np.uint8)
-        # plt.figure()
-        # plt.imshow(grey_img)
-        # plt.title('k='+str(k))
-        # plt.show()
-        # exit(0)
-        # Using Laplacian of Gaussian(LoG) to detect the inner bib
-        # blobs_log = blob_log(grey_img, min_sigma=0, max_sigma=3, num_sigma=2, threshold=0.07)
+        grey_img = np.array(img, dtype=np.uint8) #converting the image to grayscale
         blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=10, threshold=0.05)
-        # print('k=',k,blobs_log)
 
-        # blobs_doh = blob_doh(grey_img, max_sigma=5, threshold=.001)
         centerXRegion = []
         centerYRegion = []
         centerRRegion = []
         grey_ampRegion = []
         for blob in blobs_log:
             y, x, r = blob
-            # print(y,x,r)
             center = (int(x), int(y))
             centerXRegion.append(x)
             centerYRegion.append(y)
@@ -71,10 +61,6 @@ def point_detect(imcirclist):
             grey_ampRegion.append(grey_img[int(y), int(x)])
             radius = int(r)
             # print('center=', center, 'radius=', radius, 'value=', img[center], grey_img[center])
-
-        # print(centerXRegion)
-        # print(centerYRegion)
-        # print(grey_ampRegion)
 
         xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
         yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
@@ -84,20 +70,9 @@ def point_detect(imcirclist):
         detCenterXRegion.append(xindx)
         detCenterYRegion.append(yindx)
 
-        centerDet = (xindx, yindx)
-        # cv2.circle(grey_img, centerDet, rindx, (0, 0, 0), 1)
-
-
-
-        # ax = fig.add_subplot(4, 2, k+1) #plotting all the figures in a single plot
-        # ax.imshow(grey_img)
-        # ax.scatter(xindx,yindx,marker="P",color="r")
-        # ax.set_title('Bib='+str(k+1))
-        # plt.subplots_adjust(hspace=0.75)
 
         k = k + 1
 
-    # plt.show()
 
     return detCenterXRegion,detCenterYRegion
 
@@ -121,8 +96,14 @@ def read_dicom(filename,ioption):
     print("pixel spacing row [mm]=", dx)
     print("pixel spacing col [mm]=", dy)
 
+    #creating the figure extent based on the image dimensions, we divide by 10 to get the units in cm
+    extent = (0, 0 + (ArrayDicom.shape[0] * dx/10),
+              0, 0 + (ArrayDicom.shape[1] * dy/10))
+
     plt.figure()
-    plt.imshow(ArrayDicom)
+    plt.imshow(ArrayDicom, extent=extent, origin='upper')
+    plt.xlabel('x distance [cm]')
+    plt.ylabel('y distance [cm]')
     plt.show()
 
     if ioption.startswith(('y', 'yeah', 'yes')):
@@ -135,13 +116,6 @@ def read_dicom(filename,ioption):
     #we take a diagonal profile to avoid phantom artifacts
     im_profile = ArrayDicom_mod.diagonal()
 
-    # plt.figure()
-    # plt.plot(im_profile)
-    # plt.show()
-
-
-    # im_profile = ArrayDicom[int(np.shape(ArrayDicom)[0] / 2), :]
-    # min_val = np.amin(ArrayDicom)  # normalizing
     min_val = np.amin(im_profile)  # normalizing
     volume = np.int16(np.subtract(ArrayDicom , min_val))
     volume = volume / np.amax(volume)
@@ -279,9 +253,9 @@ def read_dicom(filename,ioption):
 
 
     k=0
-    fig = plt.figure(figsize=(7, 9))
+    fig = plt.figure(figsize=(7, 9))# this figure will hold the bibs
     plt.subplots_adjust(hspace=0.35)
-    # plt.subplots_adjust(left=0.12, bottom=0.06, right=0.9, top=0.91, wspace=0.2, hspace=0.32)
+
     #getting a profile to extract max value to normalize
     print('volume=',np.shape(volume)[0]/2)
 
@@ -294,12 +268,8 @@ def read_dicom(filename,ioption):
         kk = 0 #counter for data points
         for profile in profiles:
             value_near,index = find_nearest(profile, 0.5)
-            # plt.figure()
-            # plt.scatter(xdet[k],ydet[k])
-            # plt.imshow(imcirclist[k])
-            # plt.show()
 
-            if k==0 or k==1 or k==4 or k==5:
+            if k==0 or k==1 or k==4 or k==5: #there are the bibs in thehorizontal
                 print(value_near,index)
                 print('k=',k,'ydet=',ydet[k],'index=',index,'delta=',(ydet[k]-index),'px','delta=',
                       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
@@ -345,9 +315,42 @@ def read_dicom(filename,ioption):
             k=k+1
 
 
+
         pdf.savefig()
-        plt.show()
         pdf.savefig(fig)
+
+
+
+
+        fig2 = plt.figure(figsize=(7, 9))  # this figure will show the vertical and horizontal calculated field size
+        ax = fig2.add_subplot()
+        ax.imshow(volume, extent=extent, origin='upper')
+        # plt.xlabel('x distance [cm]')
+        # plt.ylabel('y distance [cm]')
+
+        # we now need to select a horizontal and a vertical profile to find the edge of the field
+        im = Image.fromarray(255 * volume[:,:])
+        im = im.resize((im.width * 10, im.height * 10), Image.LANCZOS) # we rescale the profile to make it smoother
+        profilehorz = np.array(im, dtype=np.uint8)["value here", :] / 255
+        profilevert = np.array(im, dtype=np.uint8)[:, "value here"] / 255
+
+        # top_edge,index_top= find_nearest(profile, 0.5) # finding the edge of the field on the top
+        # bot_edge,index_bot= find_nearest(profile, 0.5) # finding the edge of the field on the bottom
+
+        # l_edge,index_r = find_nearest(profile, 0.5) #finding the edge of the field on the bottom
+        # r_edge,index_l = find_nearest(profile, 0.5) #finding the edge of the field on the right
+
+        # plt.annotate(s='', xy=(1, 1), xytext=(0, 0), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
+
+        pdf.savefig(fig2)
+
+
+
+
+
+
+
+
 
 
     # Normal mode:
@@ -412,13 +415,13 @@ def read_dicom(filename,ioption):
 
 
 #Data ipunt
-try:
-    filename = str(sys.argv[1])
-    print('filename=',filename)
-except:
-    print('Please enter a valid directory name')
-    print("Use the following command to run this script")
-    print("python qc-LRCircleDet.py \"[filename]\" ")
+# try:
+#     filename = str(sys.argv[1])
+#     print('filename=',filename)
+# except:
+#     print('Please enter a valid directory name')
+#     print("Use the following command to run this script")
+#     print("python qc-LRCircleDet.py \"[filename]\" ")
 
 
 while True:  # example of infinite loops using try and except to catch only numbers
@@ -432,6 +435,13 @@ while True:  # example of infinite loops using try and except to catch only numb
 
     except:
         print('Please enter a valid option:')
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('file',type=str,help="Input the Light/Rad file")
+args=parser.parse_args()
+
+filename=args.file
 
 
 
