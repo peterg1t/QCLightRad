@@ -101,9 +101,10 @@ def read_dicom(filename,ioption):
               0, 0 + (ArrayDicom.shape[1] * dy/10))
 
     plt.figure()
-    plt.imshow(ArrayDicom, extent=extent, origin='upper')
-    plt.xlabel('x distance [cm]')
-    plt.ylabel('y distance [cm]')
+    # plt.imshow(ArrayDicom, extent=extent, origin='upper')
+    plt.imshow(ArrayDicom)
+    # plt.xlabel('x distance [cm]')
+    # plt.ylabel('y distance [cm]')
     plt.show()
 
     if ioption.startswith(('y', 'yeah', 'yes')):
@@ -271,11 +272,11 @@ def read_dicom(filename,ioption):
 
             if k==0 or k==1 or k==4 or k==5: #there are the bibs in thehorizontal
                 print(value_near,index)
-                print('k=',k,'ydet=',ydet[k],'index=',index,'delta=',(ydet[k]-index),'px','delta=',
+                print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
                       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
 
                 txt = str(round(abs((ydet[k]-index)*dy/10)-3, 2))
-                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
+                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm')
                 kk = kk + 1
 
                 y = np.linspace(0, 0 + (len(profile) * dy *10 ), len(profile), endpoint=False)
@@ -291,11 +292,11 @@ def read_dicom(filename,ioption):
                 # plt.show()
             else:
                 print(value_near, index)
-                print('ydet=', xdet[k], 'index=', index, 'delta=', (xdet[k] - index), 'px', 'delta=',
+                print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
                       abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
 
                 txt = str(round(abs((xdet[k] - index) * dx/10)-3, 2))
-                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' delta=' + txt + ' mm')
+                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm')
                 kk = kk + 1
 
                 x = np.linspace(0, 0 + (len(profile) * dx* 10), len(profile), endpoint=False)
@@ -322,25 +323,93 @@ def read_dicom(filename,ioption):
 
 
 
-        fig2 = plt.figure(figsize=(7, 9))  # this figure will show the vertical and horizontal calculated field size
-        ax = fig2.add_subplot()
-        ax.imshow(volume, extent=extent, origin='upper')
-        # plt.xlabel('x distance [cm]')
-        # plt.ylabel('y distance [cm]')
+
 
         # we now need to select a horizontal and a vertical profile to find the edge of the field
-        im = Image.fromarray(255 * volume[:,:])
-        im = im.resize((im.width * 10, im.height * 10), Image.LANCZOS) # we rescale the profile to make it smoother
-        profilehorz = np.array(im, dtype=np.uint8)["value here", :] / 255
-        profilevert = np.array(im, dtype=np.uint8)[:, "value here"] / 255
+        im = Image.fromarray(255 * volume)
+        # im = im.resize((im.width * 10, im.height * 10), Image.LANCZOS) # we rescale the profile to make it smoother
 
-        # top_edge,index_top= find_nearest(profile, 0.5) # finding the edge of the field on the top
-        # bot_edge,index_bot= find_nearest(profile, 0.5) # finding the edge of the field on the bottom
+        if ioption.startswith(('y', 'yeah', 'yes')):
 
-        # l_edge,index_r = find_nearest(profile, 0.5) #finding the edge of the field on the bottom
-        # r_edge,index_l = find_nearest(profile, 0.5) #finding the edge of the field on the right
+            profilehorz = np.array(im, dtype=np.uint8)[290, :] / 255
+            profilevert = np.array(im, dtype=np.uint8)[:, 430] / 255
 
-        # plt.annotate(s='', xy=(1, 1), xytext=(0, 0), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
+            top_edge,index_top= find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
+            bot_edge,index_bot= find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
+
+            l_edge,index_l = find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
+            r_edge,index_r = find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
+
+            print('top_edge','index_top','bot_edge','index_bot')
+            print(top_edge,index_top,bot_edge,index_bot)
+            print('l_edge', 'index_l', 'r_edge', 'index_r')
+            print(l_edge, index_l, r_edge, index_r)
+
+            fig2 = plt.figure(figsize=(7, 9))  # this figure will show the vertical and horizontal calculated field size
+            ax = fig2.add_subplot()
+            # ax.imshow(volume, extent=extent, origin='upper')
+            ax.imshow(volume)
+
+            #adding a vertical arrow
+            ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
+            ax.text(430,height//2+height//5,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14)
+
+            #adding a horizontal arrow
+            ax.annotate(s='', xy=(index_l,290), xytext=(width // 2 + index_r,290),
+                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
+            ax.text(width//2, 290-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14)
+
+
+            # plt.xlabel('x distance [cm]')
+            # plt.ylabel('y distance [cm]')
+
+
+        else:
+            profilehorz = np.array(im, dtype=np.uint8)[470, :] / 255
+            profilevert = np.array(im, dtype=np.uint8)[:, 540] / 255
+
+            top_edge, index_top = find_nearest(profilevert[0:height // 2],
+                                               0.5)  # finding the edge of the field on the top
+            bot_edge, index_bot = find_nearest(profilevert[height // 2:height],
+                                               0.5)  # finding the edge of the field on the bottom
+
+            l_edge, index_l = find_nearest(profilehorz[0:width // 2],
+                                           0.5)  # finding the edge of the field on the bottom
+            r_edge, index_r = find_nearest(profilehorz[width // 2:width],
+                                           0.5)  # finding the edge of the field on the right
+
+            # print('top_edge', 'index_top', 'bot_edge', 'index_bot')
+            # print(top_edge, index_top, bot_edge, index_bot)
+            # print('l_edge', 'index_l', 'r_edge', 'index_r')
+            # print(l_edge, index_l, r_edge, index_r)
+
+            fig2 = plt.figure(figsize=(7, 9))  # this figure will show the vertical and horizontal calculated field size
+            ax = fig2.add_subplot()
+            # ax.imshow(volume, extent=extent, origin='upper')
+            ax.imshow(volume)
+
+            # adding a vertical arrow
+            ax.annotate(s='', xy=(540, index_top), xytext=(540, height // 2 + index_bot),
+                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
+            ax.text(540, height // 2 + height // 5,
+                   'Vfs='+ str(round((height // 2 + index_bot - index_top) * dy / 10, 2)) + 'cm', rotation=90, fontsize=14)
+
+            # adding a horizontal arrow
+            ax.annotate(s='', xy=(index_l, 470), xytext=(width // 2 + index_r, 470),
+                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
+            ax.text(width // 2, 470-5, 'Hfs='+str(round((width // 2 + index_r - index_l) * dx / 10, 2)) + 'cm', rotation=0,
+                    fontsize=14)
+
+            # plt.xlabel('x distance [cm]')
+            # plt.ylabel('y distance [cm]')
+
+
+
+        plt.show()
+
+
+
+
 
         pdf.savefig(fig2)
 
