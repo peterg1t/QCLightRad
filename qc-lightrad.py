@@ -117,9 +117,29 @@ def read_dicom(filename,ioption):
     #we take a diagonal profile to avoid phantom artifacts
     im_profile = ArrayDicom_mod.diagonal()
 
-    min_val = np.amin(im_profile)  # normalizing
-    volume = np.int16(np.subtract(ArrayDicom , min_val))
-    volume = volume / np.amax(volume)
+
+
+
+    #test to make sure image is displayed correctly bibs are high amplitude against dark background
+    ctr_pixel=ArrayDicom_mod[height//2,width//2]
+    corner_pixel=ArrayDicom_mod[0,0]
+
+    if ctr_pixel > corner_pixel:
+        max_val = np.amax(im_profile)
+        volume = ArrayDicom / max_val
+        min_val = np.amin(im_profile)
+        volume = volume - min_val
+        volume = (1 - volume)  # inverting the range
+
+        min_val = np.amin(volume)  # normalizing
+        volume = volume - min_val
+        volume = volume / (np.amax(volume))
+
+    else:
+        min_val = np.amin(im_profile)  # normalizing
+        volume = ArrayDicom - min_val
+        volume = volume / np.amax(volume)
+
 
 
 
