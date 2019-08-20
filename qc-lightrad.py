@@ -270,13 +270,19 @@ def read_dicom(filename,ioption):
         for profile in profiles:
             value_near,index = find_nearest(profile, 0.5)
 
-            if k==0 or k==1 or k==4 or k==5: #there are the bibs in thehorizontal
+            if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
+                offset_value_y=round(abs((ydet[k]-index)*dy/10)-3, 2)
                 print(value_near,index)
                 print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
                       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
 
-                txt = str(round(abs((ydet[k]-index)*dy/10)-3, 2))
-                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm')
+                txt = str(offset_value_y)
+                if abs(offset_value_y) <= 1:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
+                elif abs(offset_value_y) > 1 and abs(offset_value_y) <= 2:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
+                else:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
                 y = np.linspace(0, 0 + (len(profile) * dy *10 ), len(profile), endpoint=False)
@@ -291,12 +297,18 @@ def read_dicom(filename,ioption):
                 # plt.axvline((ydet[k]-1)*dy*10)
                 # plt.show()
             else:
+                offset_value_x=round(abs((xdet[k] - index) * dx/10)-3, 2)
                 print(value_near, index)
                 print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
                       abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
 
-                txt = str(round(abs((xdet[k] - index) * dx/10)-3, 2))
-                Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm')
+                txt = str(offset_value_x)
+                if abs(offset_value_y) <= 1:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
+                elif abs(offset_value_x) > 1 and abs(offset_value_x) <= 2:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
+                else:
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
                 x = np.linspace(0, 0 + (len(profile) * dx* 10), len(profile), endpoint=False)
