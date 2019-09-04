@@ -28,6 +28,7 @@ from scipy import signal, misc
 from PIL import Image
 from tqdm import tqdm
 import argparse
+import utils as u
 # matplotlib.use('Qt5Agg')
 
 
@@ -47,6 +48,8 @@ def point_detect(imcirclist):
     for img in tqdm(imcirclist):
         grey_img = np.array(img, dtype=np.uint8) #converting the image to grayscale
         blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=10, threshold=0.05)
+        # print(blobs_log)
+        # exit(0)
 
         centerXRegion = []
         centerYRegion = []
@@ -125,22 +128,9 @@ def read_dicom(filename,ioption):
     corner_pixel=ArrayDicom_mod[0,0]
 
     if ctr_pixel > corner_pixel:
-        max_val = np.amax(im_profile)
-        volume = ArrayDicom / max_val
-        min_val = np.amin(im_profile)
-        volume = volume - min_val
-        volume = (1 - volume)  # inverting the range
+        ArrayDicom = u.range_invert(ArrayDicom)
 
-        min_val = np.amin(volume)  # normalizing
-        volume = volume - min_val
-        volume = volume / (np.amax(volume))
-
-    else:
-        min_val = np.amin(im_profile)  # normalizing
-        volume = ArrayDicom - min_val
-        volume = volume / np.amax(volume)
-
-
+    ArrayDicom = u.norm01(ArrayDicom)
 
 
 
@@ -150,28 +140,28 @@ def read_dicom(filename,ioption):
     if ioption.startswith(('y', 'yeah', 'yes')):
         #images for object detection
         imcirclist = []
-        imcirc1 = Image.fromarray(255*volume[70:130,280:350 ])
+        imcirc1 = Image.fromarray(255*ArrayDicom[70:130,280:350 ])
         imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
 
-        imcirc2 = Image.fromarray(255*volume[70:130,680:760 ])
+        imcirc2 = Image.fromarray(255*ArrayDicom[70:130,680:760 ])
         imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
 
-        imcirc3 = Image.fromarray(255*volume[150:210, 760:830])
+        imcirc3 = Image.fromarray(255*ArrayDicom[150:210, 760:830])
         imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
 
-        imcirc4 = Image.fromarray(255*volume[560:620, 760:830])
+        imcirc4 = Image.fromarray(255*ArrayDicom[560:620, 760:830])
         imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
 
-        imcirc5 = Image.fromarray(255*volume[640:700,680:760 ])
+        imcirc5 = Image.fromarray(255*ArrayDicom[640:700,680:760 ])
         imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
 
-        imcirc6 = Image.fromarray(255*volume[640:700, 270:350])
+        imcirc6 = Image.fromarray(255*ArrayDicom[640:700, 270:350])
         imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
 
-        imcirc7 = Image.fromarray(255*volume[560:620, 200:270])
+        imcirc7 = Image.fromarray(255*ArrayDicom[560:620, 200:270])
         imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
 
-        imcirc8 = Image.fromarray(255*volume[150:220, 200:270])
+        imcirc8 = Image.fromarray(255*ArrayDicom[150:220, 200:270])
         imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
 
 
@@ -208,30 +198,30 @@ def read_dicom(filename,ioption):
     else:
         imcirclist = []
         # imcirc1 = misc.imresize(volume[280:360, 360:440],1000, interp='lanczos', mode='F')
-        imcirc1 = Image.fromarray(255*volume[280:360, 360:440])
+        imcirc1 = Image.fromarray(255*ArrayDicom[280:360, 360:440])
         imcirc1 = imcirc1.resize((imcirc1.width*10,imcirc1.height*10),Image.LANCZOS)
         # imcirc1 = volume[280:360, 360:440]
         # imcirc2 = volume[280:360, 830:910]
         # imcirc2 = misc.imresize(volume[280:360, 830:910], 1000, interp='lanczos', mode='F')
-        imcirc2 = Image.fromarray(255*volume[280:360, 830:910])
+        imcirc2 = Image.fromarray(255*ArrayDicom[280:360, 830:910])
         imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
 
-        imcirc3 = Image.fromarray(255*volume[360:440, 940:1020])
+        imcirc3 = Image.fromarray(255*ArrayDicom[360:440, 940:1020])
         imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
 
-        imcirc4 = Image.fromarray(255*volume[840:920, 940:1020])
+        imcirc4 = Image.fromarray(255*ArrayDicom[840:920, 940:1020])
         imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
 
-        imcirc5 = Image.fromarray(255*volume[930:1000, 830:910])
+        imcirc5 = Image.fromarray(255*ArrayDicom[930:1000, 830:910])
         imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
 
-        imcirc6 = Image.fromarray(255*volume[930:1000, 360:440])
+        imcirc6 = Image.fromarray(255*ArrayDicom[930:1000, 360:440])
         imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
 
-        imcirc7 = Image.fromarray(255*volume[840:920, 280:360])
+        imcirc7 = Image.fromarray(255*ArrayDicom[840:920, 280:360])
         imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
 
-        imcirc8 = Image.fromarray(255*volume[360:440, 280:360])
+        imcirc8 = Image.fromarray(255*ArrayDicom[360:440, 280:360])
         imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
 
 
@@ -278,7 +268,7 @@ def read_dicom(filename,ioption):
     plt.subplots_adjust(hspace=0.35)
 
     #getting a profile to extract max value to normalize
-    print('volume=',np.shape(volume)[0]/2)
+    print('volume=',np.shape(ArrayDicom)[0]/2)
 
     #creating the page to write the results
     dirname = os.path.dirname(filename)
@@ -355,10 +345,8 @@ def read_dicom(filename,ioption):
 
 
 
-
-
         # we now need to select a horizontal and a vertical profile to find the edge of the field
-        im = Image.fromarray(255 * volume)
+        im = Image.fromarray(255 * ArrayDicom)
         # im = im.resize((im.width * 10, im.height * 10), Image.LANCZOS) # we rescale the profile to make it smoother
 
         if ioption.startswith(('y', 'yeah', 'yes')):
@@ -380,7 +368,7 @@ def read_dicom(filename,ioption):
             fig2 = plt.figure(figsize=(7,5))  # this figure will show the vertical and horizontal calculated field size
             ax = fig2.subplots()
             # ax.imshow(volume, extent=extent, origin='upper')
-            ax.imshow(volume)
+            ax.imshow(ArrayDicom)
 
             #adding a vertical arrow
             ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
@@ -418,7 +406,7 @@ def read_dicom(filename,ioption):
             fig2 = plt.figure(figsize=(7, 5))  # this figure will show the vertical and horizontal calculated field size
             ax = fig2.subplots()
             # ax.imshow(volume, extent=extent, origin='upper')
-            ax.imshow(volume)
+            ax.imshow(ArrayDicom)
 
             # adding a vertical arrow
             ax.annotate(s='', xy=(540, index_top), xytext=(540, height // 2 + index_bot),
