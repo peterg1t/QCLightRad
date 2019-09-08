@@ -938,6 +938,11 @@ def read_dicom(filename,ioption):
     #creating the page to write the results
     dirname = os.path.dirname(filename)
     print(dirname)
+
+    #tolerance levels to change at will
+    tol=1.0 #tolearance level
+    act=2.0 #action level
+
     with PdfPages(dirname + '/' + 'Light-rad_report.pdf') as pdf:
         Page = plt.figure(figsize=(4, 5))
         Page.text(0.45, 0.9, 'Report',size=18)
@@ -947,14 +952,15 @@ def read_dicom(filename,ioption):
 
             if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
                 offset_value_y=round(abs((ydet[k]-index)*dy/10)-3, 2)
-                print(value_near,index)
-                print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
-                      abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
+                # print(value_near,index)
+                # print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
+                #       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
 
                 txt = str(offset_value_y)
-                if abs(offset_value_y) <= 1:
+                print('offset_value_y=',offset_value_y)
+                if abs(offset_value_y) <= tol:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
-                elif abs(offset_value_y) > 1 and abs(offset_value_y) <= 2:
+                elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
                 else:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
@@ -973,16 +979,19 @@ def read_dicom(filename,ioption):
                 # plt.show()
             else:
                 offset_value_x=round(abs((xdet[k] - index) * dx/10)-3, 2)
-                print(value_near, index)
-                print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
-                      abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
+                # print(value_near, index)
+                # print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
+                #       abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
 
                 txt = str(offset_value_x)
-                if abs(offset_value_y) <= 1:
+                if abs(offset_value_x) <= tol:
+                    print('1')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
-                elif abs(offset_value_x) > 1 and abs(offset_value_x) <= 2:
+                elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
+                    print('2')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
                 else:
+                    print('3')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
