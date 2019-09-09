@@ -951,7 +951,7 @@ def read_dicom(filename,ioption):
             value_near,index = find_nearest(profile, 0.5)
 
             if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
-                offset_value_y=round(abs((ydet[k]-index)*dy/10)-3, 2)
+                offset_value_y=round(abs((ydet[k]-index)*(dy/10))-3, 2)
                 # print(value_near,index)
                 # print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
                 #       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
@@ -978,7 +978,7 @@ def read_dicom(filename,ioption):
                 # plt.axvline((ydet[k]-1)*dy*10)
                 # plt.show()
             else:
-                offset_value_x=round(abs((xdet[k] - index) * dx/10)-3, 2)
+                offset_value_x=round(abs((xdet[k] - index) * (dx/10))-3, 2)
                 # print(value_near, index)
                 # print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
                 #       abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
