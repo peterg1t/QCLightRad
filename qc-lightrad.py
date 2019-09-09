@@ -1046,7 +1046,7 @@ def read_dicom(filename,ioption):
 
             #adding a vertical arrow
             ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
-            ax.text(430+10,height//2+height//8,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14)
+            ax.text(430 + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14)
 
             #adding a horizontal arrow
             ax.annotate(s='', xy=(index_l,290), xytext=(width // 2 + index_r,290),
@@ -1085,7 +1085,7 @@ def read_dicom(filename,ioption):
             # adding a vertical arrow
             ax.annotate(s='', xy=(540, index_top), xytext=(540, height // 2 + index_bot),
                         arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
-            ax.text(540+10, height // 2 + height // 5,
+            ax.text(540+10, height // 2 ,
                    'Vfs='+ str(round((height // 2 + index_bot - index_top) * dy / 10, 2)) + 'cm', rotation=90, fontsize=14)
 
             # adding a horizontal arrow
