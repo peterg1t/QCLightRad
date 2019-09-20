@@ -712,7 +712,7 @@ def point_detect(imcirclist):
     print('Finding bibs in phantom...')
     for img in tqdm(imcirclist):
         grey_img = np.array(img, dtype=np.uint8) #converting the image to grayscale
-        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=10, threshold=0.05)
+        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=3, threshold=0.05)
         # print(blobs_log)
         # exit(0)
 
