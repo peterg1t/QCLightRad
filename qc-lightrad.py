@@ -773,7 +773,7 @@ def read_dicom(filename,ioption):
     plt.imshow(ArrayDicom)
     # plt.xlabel('x distance [cm]')
     # plt.ylabel('y distance [cm]')
-    plt.show()
+    # plt.show()
 
     if ioption.startswith(('y', 'yeah', 'yes')):
         height, width = ArrayDicom.shape
@@ -1099,7 +1099,7 @@ def read_dicom(filename,ioption):
 
 
 
-        plt.show()
+        # plt.show()
 
 
 
@@ -1116,19 +1116,19 @@ def read_dicom(filename,ioption):
 
 
 
-    # Normal mode:
-    print()
-    print("Directory folder.........:", dirname)
-    print("Storage type.....:", dataset.SOPClassUID)
-    print()
-
-    pat_name = dataset.PatientName
-    display_name = pat_name.family_name + ", " + pat_name.given_name
-    print("Patient's name...:", display_name)
-    print("Patient id.......:", dataset.PatientID)
-    print("Modality.........:", dataset.Modality)
-    print("Study Date.......:", dataset.StudyDate)
-    print("Gantry angle......", dataset.GantryAngle)
+    # # Normal mode:
+    # print()
+    # print("Directory folder.........:", dirname)
+    # print("Storage type.....:", dataset.SOPClassUID)
+    # print()
+    #
+    # pat_name = dataset.PatientName
+    # display_name = pat_name.family_name + ", " + pat_name.given_name
+    # print("Patient's name...:", display_name)
+    # print("Patient id.......:", dataset.PatientID)
+    # print("Modality.........:", dataset.Modality)
+    # print("Study Date.......:", dataset.StudyDate)
+    # print("Gantry angle......", dataset.GantryAngle)
 
 
 
