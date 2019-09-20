@@ -1045,13 +1045,13 @@ def read_dicom(filename,ioption):
             ax.imshow(ArrayDicom)
 
             #adding a vertical arrow
-            ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->')) # example on how to plota double headed arrow
-            ax.text(430 + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14)
+            ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plota double headed arrow
+            ax.text(430 + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
 
             #adding a horizontal arrow
             ax.annotate(s='', xy=(index_l,290), xytext=(width // 2 + index_r,290),
-                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
-            ax.text(width//2, 290-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14)
+                        arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
+            ax.text(width//2, 290-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
 
 
             # plt.xlabel('x distance [cm]')
