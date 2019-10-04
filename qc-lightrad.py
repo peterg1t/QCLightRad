@@ -697,11 +697,7 @@ import utils as u
 # matplotlib.use('Qt5Agg')
 
 
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return array[idx],idx
-    # return array[idx]
+
 
 
 def point_detect(imcirclist):
@@ -712,7 +708,7 @@ def point_detect(imcirclist):
     print('Finding bibs in phantom...')
     for img in tqdm(imcirclist):
         grey_img = np.array(img, dtype=np.uint8) #converting the image to grayscale
-        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=3, threshold=0.05)
+        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=10, threshold=0.05)
         # print(blobs_log)
         # exit(0)
 
@@ -768,9 +764,9 @@ def read_dicom(filename,ioption):
     extent = (0, 0 + (ArrayDicom.shape[0] * dx/10),
               0, 0 + (ArrayDicom.shape[1] * dy/10))
 
-    plt.figure()
+    # plt.figure()
     # plt.imshow(ArrayDicom, extent=extent, origin='upper')
-    plt.imshow(ArrayDicom)
+    # plt.imshow(ArrayDicom)
     # plt.xlabel('x distance [cm]')
     # plt.ylabel('y distance [cm]')
     # plt.show()
@@ -948,13 +944,11 @@ def read_dicom(filename,ioption):
         Page.text(0.45, 0.9, 'Report',size=18)
         kk = 0 #counter for data points
         for profile in profiles:
-            value_near,index = find_nearest(profile, 0.5)
+            value_near,index = u.find_nearest(profile, 0.5) # find the 50% amplitude point
+
 
             if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
                 offset_value_y=round(abs((ydet[k]-index)*(dy/10))-3, 2)
-                # print(value_near,index)
-                # print('k=',k,'ydet=',ydet[k],'index=',index,'offset=',(ydet[k]-index),'px','offset=',
-                #       abs((ydet[k]-index)*dy/10)-3,'mm','dy=',dy/10)
 
                 txt = str(offset_value_y)
                 print('offset_value_y=',offset_value_y)
@@ -979,9 +973,6 @@ def read_dicom(filename,ioption):
                 # plt.show()
             else:
                 offset_value_x=round(abs((xdet[k] - index) * (dx/10))-3, 2)
-                # print(value_near, index)
-                # print('ydet=', xdet[k], 'index=', index, 'offset=', (xdet[k] - index), 'px', 'offset=',
-                #       abs((xdet[k] - index) * dx/10)-3, 'mm', 'dx=', dx/10)
 
                 txt = str(offset_value_x)
                 if abs(offset_value_x) <= tol:
@@ -1002,13 +993,6 @@ def read_dicom(filename,ioption):
                 ax.set_title('Bib=' + str(k + 1))
                 ax.axvline(index,color="r", linestyle='--')
 
-                # plt.figure()
-                # plt.scatter(x, profile)
-                # plt.scatter(index * dx*10, value_near)
-                # plt.axvline((xdet[k]-1) * dx*10)
-                # plt.show()
-
-
             k=k+1
 
 
@@ -1016,6 +1000,11 @@ def read_dicom(filename,ioption):
         pdf.savefig()
         pdf.savefig(fig)
 
+
+        plt.figure()
+        plt.imshow(255*ArrayDicom)
+        plt.show()
+        exit(0)
 
 
 
@@ -1028,11 +1017,17 @@ def read_dicom(filename,ioption):
             profilehorz = np.array(im, dtype=np.uint8)[290, :] / 255
             profilevert = np.array(im, dtype=np.uint8)[:, 430] / 255
 
-            top_edge,index_top= find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
-            bot_edge,index_bot= find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
+            plt.figure()
+            plt.plot(profilehorz)
+            plt.show()
+            exit(0)
+            # im_centre = im_centre.resize((im_centre.width * 10, im_centre.height * 10), Image.LANCZOS)
 
-            l_edge,index_l = find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
-            r_edge,index_r = find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
+            top_edge,index_top= u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
+            bot_edge,index_bot= u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
+
+            l_edge,index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
+            r_edge,index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
 
             print('top_edge','index_top','bot_edge','index_bot')
             print(top_edge,index_top,bot_edge,index_bot)
@@ -1062,14 +1057,14 @@ def read_dicom(filename,ioption):
             profilehorz = np.array(im, dtype=np.uint8)[470, :] / 255
             profilevert = np.array(im, dtype=np.uint8)[:, 540] / 255
 
-            top_edge, index_top = find_nearest(profilevert[0:height // 2],
+            top_edge, index_top = u.find_nearest(profilevert[0:height // 2],
                                                0.5)  # finding the edge of the field on the top
-            bot_edge, index_bot = find_nearest(profilevert[height // 2:height],
+            bot_edge, index_bot = u.find_nearest(profilevert[height // 2:height],
                                                0.5)  # finding the edge of the field on the bottom
 
-            l_edge, index_l = find_nearest(profilehorz[0:width // 2],
+            l_edge, index_l = u.find_nearest(profilehorz[0:width // 2],
                                            0.5)  # finding the edge of the field on the bottom
-            r_edge, index_r = find_nearest(profilehorz[width // 2:width],
+            r_edge, index_r = u.find_nearest(profilehorz[width // 2:width],
                                            0.5)  # finding the edge of the field on the right
 
             # print('top_edge', 'index_top', 'bot_edge', 'index_bot')
