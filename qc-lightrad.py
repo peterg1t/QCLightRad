@@ -1001,10 +1001,10 @@ def read_dicom(filename,ioption):
         pdf.savefig(fig)
 
 
-        plt.figure()
-        plt.imshow(255*ArrayDicom)
-        plt.show()
-        exit(0)
+        # plt.figure()
+        # plt.imshow(255*ArrayDicom)
+        # plt.show()
+        # exit(0)
 
 
 
@@ -1017,10 +1017,10 @@ def read_dicom(filename,ioption):
             profilehorz = np.array(im, dtype=np.uint8)[290, :] / 255
             profilevert = np.array(im, dtype=np.uint8)[:, 430] / 255
 
-            plt.figure()
-            plt.plot(profilehorz)
-            plt.show()
-            exit(0)
+            # plt.figure()
+            # plt.plot(profilehorz)
+            # plt.show()
+            # exit(0)
             # im_centre = im_centre.resize((im_centre.width * 10, im_centre.height * 10), Image.LANCZOS)
 
             top_edge,index_top= u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
