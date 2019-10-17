@@ -162,133 +162,86 @@ def read_dicom(filename,ioption):
 
 
 
-    #working on transforming the full image and invert it first and go from there.
-
-
+    # working on transforming the full image and invert it first and go from there.
     if ioption.startswith(('y', 'yeah', 'yes')):
-        #images for object detection
-        imcirclist = []
-        imcirc1 = Image.fromarray(255*ArrayDicom[70:130,280:350 ])
-        imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
-
-        imcirc2 = Image.fromarray(255*ArrayDicom[70:130,680:760 ])
-        imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
-
-        imcirc3 = Image.fromarray(255*ArrayDicom[150:210, 760:830])
-        imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
-
-        imcirc4 = Image.fromarray(255*ArrayDicom[560:620, 760:830])
-        imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
-
-        imcirc5 = Image.fromarray(255*ArrayDicom[640:700,680:760 ])
-        imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
-
-        imcirc6 = Image.fromarray(255*ArrayDicom[640:700, 270:350])
-        imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
-
-        imcirc7 = Image.fromarray(255*ArrayDicom[560:620, 200:270])
-        imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
-
-        imcirc8 = Image.fromarray(255*ArrayDicom[150:220, 200:270])
-        imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
-
-
-        imcirclist.append(imcirc1)
-        imcirclist.append(imcirc2)
-        imcirclist.append(imcirc3)
-        imcirclist.append(imcirc4)
-        imcirclist.append(imcirc5)
-        imcirclist.append(imcirc6)
-        imcirclist.append(imcirc7)
-        imcirclist.append(imcirc8)
-
-        xdet, ydet = point_detect(imcirclist)
-
-        profiles = []
-        profile1 = np.array(imcirc1, dtype=np.uint8)[:,xdet[0]]/255
-        profile2 = np.array(imcirc2, dtype=np.uint8)[:,xdet[1]]/255
-        profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2],:]/255
-        profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3],:]/255
-        profile5 = np.array(imcirc5, dtype=np.uint8)[:,xdet[4]]/255
-        profile6 = np.array(imcirc6, dtype=np.uint8)[:,xdet[5]]/255
-        profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6],:]/255
-        profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7],:]/255
-
-        profiles.append(profile1)
-        profiles.append(profile2)
-        profiles.append(profile3)
-        profiles.append(profile4)
-        profiles.append(profile5)
-        profiles.append(profile6)
-        profiles.append(profile7)
-        profiles.append(profile8)
-
+        ROI1 = {'edge_top': 70, 'edge_bottom': 130, 'edge_left': 270, 'edge_right': 350}
+        ROI2 = {'edge_top': 70, 'edge_bottom': 130, 'edge_left': 680, 'edge_right': 760}
+        ROI3 = {'edge_top': 150, 'edge_bottom': 210, 'edge_left': 760, 'edge_right': 830}
+        ROI4 = {'edge_top': 560, 'edge_bottom': 620, 'edge_left': 760, 'edge_right': 830}
+        ROI5 = {'edge_top': 640, 'edge_bottom': 700, 'edge_left': 680, 'edge_right': 760}
+        ROI6 = {'edge_top': 640, 'edge_bottom': 700, 'edge_left': 270, 'edge_right': 350}
+        ROI7 = {'edge_top': 560, 'edge_bottom': 620, 'edge_left': 200, 'edge_right': 270}
+        ROI8 = {'edge_top': 150, 'edge_bottom': 210, 'edge_left': 200, 'edge_right': 270}
     else:
-        imcirclist = []
-        # imcirc1 = misc.imresize(volume[280:360, 360:440],1000, interp='lanczos', mode='F')
-        imcirc1 = Image.fromarray(255*ArrayDicom[280:360, 360:440])
-        imcirc1 = imcirc1.resize((imcirc1.width*10,imcirc1.height*10),Image.LANCZOS)
-        # imcirc1 = volume[280:360, 360:440]
-        # imcirc2 = volume[280:360, 830:910]
-        # imcirc2 = misc.imresize(volume[280:360, 830:910], 1000, interp='lanczos', mode='F')
-        imcirc2 = Image.fromarray(255*ArrayDicom[280:360, 830:910])
-        imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
-
-        imcirc3 = Image.fromarray(255*ArrayDicom[360:440, 940:1020])
-        imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
-
-        imcirc4 = Image.fromarray(255*ArrayDicom[840:920, 940:1020])
-        imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
-
-        imcirc5 = Image.fromarray(255*ArrayDicom[930:1000, 830:910])
-        imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
-
-        imcirc6 = Image.fromarray(255*ArrayDicom[930:1000, 360:440])
-        imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
-
-        imcirc7 = Image.fromarray(255*ArrayDicom[840:920, 280:360])
-        imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
-
-        imcirc8 = Image.fromarray(255*ArrayDicom[360:440, 280:360])
-        imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
+        ROI1 = {'edge_top': 280, 'edge_bottom': 360, 'edge_left': 360, 'edge_right': 440}
+        ROI2 = {'edge_top': 280, 'edge_bottom': 360, 'edge_left': 830, 'edge_right': 910}
+        ROI3 = {'edge_top': 360, 'edge_bottom': 440, 'edge_left': 940, 'edge_right': 1020}
+        ROI4 = {'edge_top': 840, 'edge_bottom': 920, 'edge_left': 940, 'edge_right': 1020}
+        ROI5 = {'edge_top': 930, 'edge_bottom': 1000, 'edge_left': 830, 'edge_right': 910}
+        ROI6 = {'edge_top': 930, 'edge_bottom': 1000, 'edge_left': 360, 'edge_right': 440}
+        ROI7 = {'edge_top': 840, 'edge_bottom': 920, 'edge_left': 280, 'edge_right': 360}
+        ROI8 = {'edge_top': 360, 'edge_bottom': 440, 'edge_left': 280, 'edge_right': 360}
 
 
-        imcirclist.append(imcirc1)
-        imcirclist.append(imcirc2)
-        imcirclist.append(imcirc3)
-        imcirclist.append(imcirc4)
-        imcirclist.append(imcirc5)
-        imcirclist.append(imcirc6)
-        imcirclist.append(imcirc7)
-        imcirclist.append(imcirc8)
+    #images for object detection
+    imcirclist = []
+    imcirc1 = Image.fromarray(255*ArrayDicom[ROI1['edge_top']:ROI1['edge_bottom'],ROI1['edge_left']:ROI1['edge_right'] ])
+    imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
 
-        xdet, ydet = point_detect(imcirclist)
-        print('location->',xdet,ydet)
+    imcirc2 = Image.fromarray(255 * ArrayDicom[ROI2['edge_top']:ROI2['edge_bottom'], ROI2['edge_left']:ROI2['edge_right']])
+    imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
 
-
-        # we need to find a profile along the middle point and find the edge of the field at 80% then we
-        # measure the distance from the field to the bib
+    imcirc3 = Image.fromarray(255 * ArrayDicom[ROI3['edge_top']:ROI3['edge_bottom'], ROI3['edge_left']:ROI3['edge_right']])
+    imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
 
 
-        #converting back to array
-        profiles = []
-        profile1 = np.array(imcirc1, dtype=np.uint8)[:,xdet[0]]/255
-        profile2 = np.array(imcirc2, dtype=np.uint8)[:,xdet[1]]/255
-        profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2],:]/255
-        profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3],:]/255
-        profile5 = np.array(imcirc5, dtype=np.uint8)[:,xdet[4]]/255
-        profile6 = np.array(imcirc6, dtype=np.uint8)[:,xdet[5]]/255
-        profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6],:]/255
-        profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7],:]/255
+    imcirc4 = Image.fromarray(255 * ArrayDicom[ROI4['edge_top']:ROI4['edge_bottom'], ROI4['edge_left']:ROI4['edge_right']])
+    imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
 
-        profiles.append(profile1)
-        profiles.append(profile2)
-        profiles.append(profile3)
-        profiles.append(profile4)
-        profiles.append(profile5)
-        profiles.append(profile6)
-        profiles.append(profile7)
-        profiles.append(profile8)
+    imcirc5 = Image.fromarray(255 * ArrayDicom[ROI5['edge_top']:ROI5['edge_bottom'], ROI5['edge_left']:ROI5['edge_right']])
+    imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
+
+    imcirc6 = Image.fromarray(255 * ArrayDicom[ROI6['edge_top']:ROI6['edge_bottom'], ROI6['edge_left']:ROI6['edge_right']])
+    imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
+
+    imcirc7 = Image.fromarray(255 * ArrayDicom[ROI7['edge_top']:ROI7['edge_bottom'], ROI7['edge_left']:ROI7['edge_right']])
+    imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
+
+    imcirc8 = Image.fromarray(255 * ArrayDicom[ROI8['edge_top']:ROI8['edge_bottom'], ROI8['edge_left']:ROI8['edge_right']])
+    imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
+
+
+    imcirclist.append(imcirc1)
+    imcirclist.append(imcirc2)
+    imcirclist.append(imcirc3)
+    imcirclist.append(imcirc4)
+    imcirclist.append(imcirc5)
+    imcirclist.append(imcirc6)
+    imcirclist.append(imcirc7)
+    imcirclist.append(imcirc8)
+
+    xdet, ydet = point_detect(imcirclist)
+
+    profiles = []
+    profile1 = np.array(imcirc1, dtype=np.uint8)[:,xdet[0]]/255
+    profile2 = np.array(imcirc2, dtype=np.uint8)[:,xdet[1]]/255
+    profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2],:]/255
+    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3],:]/255
+    profile5 = np.array(imcirc5, dtype=np.uint8)[:,xdet[4]]/255
+    profile6 = np.array(imcirc6, dtype=np.uint8)[:,xdet[5]]/255
+    profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6],:]/255
+    profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7],:]/255
+
+    profiles.append(profile1)
+    profiles.append(profile2)
+    profiles.append(profile3)
+    profiles.append(profile4)
+    profiles.append(profile5)
+    profiles.append(profile6)
+    profiles.append(profile7)
+    profiles.append(profile8)
+
+
 
 
     k=0
@@ -305,6 +258,7 @@ def read_dicom(filename,ioption):
     #tolerance levels to change at will
     tol=1.0 #tolearance level
     act=2.0 #action level
+    phantom_distance =3.0 # distance from the bib to the edge of the phantom
 
     with PdfPages(dirname + '/' + 'Light-rad_report.pdf') as pdf:
         Page = plt.figure(figsize=(4, 5))
@@ -315,7 +269,7 @@ def read_dicom(filename,ioption):
 
 
             if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
-                offset_value_y=round(abs((ydet[k]-index)*(dy/10))-3, 2)
+                offset_value_y=round(abs((ydet[k]-index)*(dy/10))-phantom_distance, 2)
 
                 txt = str(offset_value_y)
                 print('offset_value_y=',offset_value_y)
@@ -339,7 +293,7 @@ def read_dicom(filename,ioption):
                 # plt.axvline((ydet[k]-1)*dy*10)
                 # plt.show()
             else:
-                offset_value_x=round(abs((xdet[k] - index) * (dx/10))-3, 2)
+                offset_value_x=round(abs((xdet[k] - index) * (dx/10))-phantom_distance, 2)
 
                 txt = str(offset_value_x)
                 if abs(offset_value_x) <= tol:
@@ -374,94 +328,53 @@ def read_dicom(filename,ioption):
         # exit(0)
 
 
-
-        # we now need to select a horizontal and a vertical profile to find the edge of the field
+        # we now need to select a horizontal and a vertical profile to find the edge of the field from an image
         im = Image.fromarray(255 * ArrayDicom)
-        # im = im.resize((im.width * 10, im.height * 10), Image.LANCZOS) # we rescale the profile to make it smoother
+
+
 
         if ioption.startswith(('y', 'yeah', 'yes')):
-
-            profilehorz = np.array(im, dtype=np.uint8)[290, :] / 255
-            profilevert = np.array(im, dtype=np.uint8)[:, 430] / 255
-
-            # plt.figure()
-            # plt.plot(profilehorz)
-            # plt.show()
-            # exit(0)
-            # im_centre = im_centre.resize((im_centre.width * 10, im_centre.height * 10), Image.LANCZOS)
-
-            top_edge,index_top= u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
-            bot_edge,index_bot= u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
-
-            l_edge,index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
-            r_edge,index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
-
-            print('top_edge','index_top','bot_edge','index_bot')
-            print(top_edge,index_top,bot_edge,index_bot)
-            print('l_edge', 'index_l', 'r_edge', 'index_r')
-            print(l_edge, index_l, r_edge, index_r)
-
-            fig2 = plt.figure(figsize=(7,5))  # this figure will show the vertical and horizontal calculated field size
-            ax = fig2.subplots()
-            # ax.imshow(volume, extent=extent, origin='upper')
-            ax.imshow(ArrayDicom)
-
-            #adding a vertical arrow
-            ax.annotate(s='', xy=(430,index_top ), xytext=(430,height//2+index_bot), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plota double headed arrow
-            ax.text(430 + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
-
-            #adding a horizontal arrow
-            ax.annotate(s='', xy=(index_l,290), xytext=(width // 2 + index_r,290),
-                        arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
-            ax.text(width//2, 290-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
-
-
-            # plt.xlabel('x distance [cm]')
-            # plt.ylabel('y distance [cm]')
-
-
+            PROFILE={'horizontal':270,'vertical':430} # location to extract the horizontal and vertical profiles if this is a linac
         else:
-            profilehorz = np.array(im, dtype=np.uint8)[470, :] / 255
-            profilevert = np.array(im, dtype=np.uint8)[:, 540] / 255
+            PROFILE={'horizontal':470,'vertical':510} # location to extract the horizontal and vertical profiles if this is a true beam
 
-            top_edge, index_top = u.find_nearest(profilevert[0:height // 2],
-                                               0.5)  # finding the edge of the field on the top
-            bot_edge, index_bot = u.find_nearest(profilevert[height // 2:height],
-                                               0.5)  # finding the edge of the field on the bottom
+        profilehorz = np.array(im, dtype=np.uint8)[PROFILE['horizontal'], :] / 255    # we need to change these limits on a less specific criteria
+        profilevert = np.array(im, dtype=np.uint8)[:, PROFILE['vertical']] / 255
 
-            l_edge, index_l = u.find_nearest(profilehorz[0:width // 2],
-                                           0.5)  # finding the edge of the field on the bottom
-            r_edge, index_r = u.find_nearest(profilehorz[width // 2:width],
-                                           0.5)  # finding the edge of the field on the right
+        top_edge,index_top= u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
+        bot_edge,index_bot= u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
 
-            # print('top_edge', 'index_top', 'bot_edge', 'index_bot')
-            # print(top_edge, index_top, bot_edge, index_bot)
-            # print('l_edge', 'index_l', 'r_edge', 'index_r')
-            # print(l_edge, index_l, r_edge, index_r)
+        l_edge,index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
+        r_edge,index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
 
-            fig2 = plt.figure(figsize=(7, 5))  # this figure will show the vertical and horizontal calculated field size
-            ax = fig2.subplots()
-            # ax.imshow(volume, extent=extent, origin='upper')
-            ax.imshow(ArrayDicom)
+        print('top_edge','index_top','bot_edge','index_bot')
+        print(top_edge,
+              index_top,
+              bot_edge,
+              index_bot)
+        print('l_edge', 'index_l', 'r_edge', 'index_r')
+        print(l_edge, index_l, r_edge, index_r)
 
-            # adding a vertical arrow
-            ax.annotate(s='', xy=(540, index_top), xytext=(540, height // 2 + index_bot),
-                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
-            ax.text(540+10, height // 2 ,
-                   'Vfs='+ str(round((height // 2 + index_bot - index_top) * dy / 10, 2)) + 'cm', rotation=90, fontsize=14)
+        fig2 = plt.figure(figsize=(7,5))  # this figure will show the vertical and horizontal calculated field size
+        ax = fig2.subplots()
+        # ax.imshow(volume, extent=extent, origin='upper')
+        ax.imshow(ArrayDicom)
 
-            # adding a horizontal arrow
-            ax.annotate(s='', xy=(index_l, 470), xytext=(width // 2 + index_r, 470),
-                        arrowprops=dict(arrowstyle='<->'))  # example on how to plota double headed arrow
-            ax.text(width // 2, 470-5, 'Hfs='+str(round((width // 2 + index_r - index_l) * dx / 10, 2)) + 'cm', rotation=0,
-                    fontsize=14)
+        #adding a vertical arrow
+        ax.annotate(s='', xy=(PROFILE['vertical'],index_top ), xytext=(PROFILE['vertical'],height//2+index_bot), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plot a double headed arrow
+        ax.text(PROFILE['vertical'] + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
 
-            # plt.xlabel('x distance [cm]')
-            # plt.ylabel('y distance [cm]')
+        #adding a horizontal arrow
+        ax.annotate(s='', xy=(index_l,PROFILE['horizontal']), xytext=(width // 2 + index_r,PROFILE['horizontal']),
+                    arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
+        ax.text(width//2, PROFILE['horizontal']-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
 
 
+        # plt.xlabel('x distance [cm]')
+        # plt.ylabel('y distance [cm]')
 
-        # plt.show()
+
+
 
 
 
