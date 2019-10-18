@@ -329,6 +329,7 @@ def read_dicom(filename,ioption):
 
 
         # we now need to select a horizontal and a vertical profile to find the edge of the field from an image
+        # for the field size calculation
         im = Image.fromarray(255 * ArrayDicom)
 
 
@@ -357,17 +358,20 @@ def read_dicom(filename,ioption):
 
         fig2 = plt.figure(figsize=(7,5))  # this figure will show the vertical and horizontal calculated field size
         ax = fig2.subplots()
-        # ax.imshow(volume, extent=extent, origin='upper')
-        ax.imshow(ArrayDicom)
+        ax.imshow(ArrayDicom, extent=extent, origin='upper')
+        ax.set_xlabel('x distance [cm]')
+        ax.set_ylabel('y distance [cm]')
+        # ax.imshow(ArrayDicom)
 
         #adding a vertical arrow
-        ax.annotate(s='', xy=(PROFILE['vertical'],index_top ), xytext=(PROFILE['vertical'],height//2+index_bot), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plot a double headed arrow
-        ax.text(PROFILE['vertical'] + 10, height // 2,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
+        ax.annotate(s='', xy=(PROFILE['vertical']*dx/10,index_top*dy/10 ), xytext=(PROFILE['vertical']*dx/10,(height//2+index_bot)*dy/10), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plot a double headed arrow
+        ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 2)*dy/10,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
 
         #adding a horizontal arrow
-        ax.annotate(s='', xy=(index_l,PROFILE['horizontal']), xytext=(width // 2 + index_r,PROFILE['horizontal']),
+        print(index_l*dx,index_l,PROFILE['horizontal']*dy,PROFILE['horizontal'])
+        ax.annotate(s='', xy=(index_l*dx/10,PROFILE['horizontal']*dy/10), xytext=((width // 2 + index_r)*dx/10,PROFILE['horizontal']*dy/10),
                     arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
-        ax.text(width//2, PROFILE['horizontal']-5, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
+        ax.text((width//2)*dx/10, (PROFILE['horizontal']+10)*dy/10, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
 
 
         # plt.xlabel('x distance [cm]')
