@@ -128,8 +128,8 @@ def read_dicom(filename,ioption):
     print("pixel spacing col [mm]=", dy)
 
     #creating the figure extent based on the image dimensions, we divide by 10 to get the units in cm
-    extent = (0, 0 + (ArrayDicom.shape[0] * dx/10),
-              0, 0 + (ArrayDicom.shape[1] * dy/10))
+    extent = (0, 0 + (ArrayDicom.shape[1] * dx/10),
+              0, 0 + (ArrayDicom.shape[0] * dy/10))
 
     # plt.figure()
     # plt.imshow(ArrayDicom, extent=extent, origin='upper')
@@ -372,14 +372,6 @@ def read_dicom(filename,ioption):
         ax.annotate(s='', xy=(index_l*dx/10,PROFILE['horizontal']*dy/10), xytext=((width // 2 + index_r)*dx/10,PROFILE['horizontal']*dy/10),
                     arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
         ax.text((width//2)*dx/10, (PROFILE['horizontal']+10)*dy/10, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
-
-
-        # plt.xlabel('x distance [cm]')
-        # plt.ylabel('y distance [cm]')
-
-
-
-
 
 
 
