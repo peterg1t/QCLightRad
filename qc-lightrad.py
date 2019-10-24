@@ -335,7 +335,7 @@ def read_dicom(filename,ioption):
 
 
         if ioption.startswith(('y', 'yeah', 'yes')):
-            PROFILE={'horizontal':270,'vertical':430} # location to extract the horizontal and vertical profiles if this is a linac
+            PROFILE={'horizontal':500,'vertical':430} # location to extract the horizontal and vertical profiles if this is a linac
         else:
             PROFILE={'horizontal':470,'vertical':510} # location to extract the horizontal and vertical profiles if this is a true beam
 
@@ -365,7 +365,7 @@ def read_dicom(filename,ioption):
 
         #adding a vertical arrow
         ax.annotate(s='', xy=(PROFILE['vertical']*dx/10,index_top*dy/10 ), xytext=(PROFILE['vertical']*dx/10,(height//2+index_bot)*dy/10), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plot a double headed arrow
-        ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 2)*dy/10,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
+        ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 7)*dy/10,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
 
         #adding a horizontal arrow
         print(index_l*dx,index_l,PROFILE['horizontal']*dy,PROFILE['horizontal'])
