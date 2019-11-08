@@ -70,9 +70,7 @@ def point_detect(imcirclist):
     print('Finding bibs in phantom...')
     for img in tqdm(imcirclist):
         grey_img = np.array(img, dtype=np.uint8) #converting the image to grayscale
-        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=50, num_sigma=10, threshold=0.05)
-        # print(blobs_log)
-        # exit(0)
+        blobs_log = blob_log(grey_img, min_sigma=15, max_sigma=40, num_sigma=10, threshold=0.05)
 
         centerXRegion = []
         centerYRegion = []
@@ -96,8 +94,8 @@ def point_detect(imcirclist):
         detCenterXRegion.append(xindx)
         detCenterYRegion.append(yindx)
 
-
         k = k + 1
+
 
 
     return detCenterXRegion, detCenterYRegion
@@ -217,6 +215,7 @@ def read_dicom(filenm, ioptn):
 
     xdet, ydet = point_detect(imcirclist)
 
+
     profiles = []
     profile1 = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]]/255
     profile2 = np.array(imcirc2, dtype=np.uint8)[:, xdet[1]]/255
@@ -244,11 +243,11 @@ def read_dicom(filenm, ioptn):
     plt.subplots_adjust(hspace=0.35)
 
     #getting a profile to extract max value to normalize
-    print('volume=', np.shape(ArrayDicom)[0]/2)
+    # print('volume=', np.shape(ArrayDicom)[0]/2)
 
     #creating the page to write the results
     dirname = os.path.dirname(filenm)
-    print(dirname)
+    # print(dirname)
 
     #tolerance levels to change at will
     tol = 1.0 #tolearance level
@@ -267,7 +266,7 @@ def read_dicom(filenm, ioptn):
                 offset_value_y = round(abs((ydet[k]-index)*(dy/10))-phantom_distance, 2)
 
                 txt = str(offset_value_y)
-                print('offset_value_y=', offset_value_y)
+                # print('offset_value_y=', offset_value_y)
                 if abs(offset_value_y) <= tol:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm', color='g')
                 elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
@@ -292,20 +291,20 @@ def read_dicom(filenm, ioptn):
 
                 txt = str(offset_value_x)
                 if abs(offset_value_x) <= tol:
-                    print('1')
+                    # print('1')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm', color='g')
                 elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
-                    print('2')
+                    # print('2')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
                 else:
-                    print('3')
+                    # print('3')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
                 # x = np.linspace(0, 0 + (len(profile) * dx * 10), len(profile), endpoint=False)
                 ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
                 ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
+                ax.scatter(xdet[k], ydet[k],print s=30, marker="P", color="y")
                 ax.set_title('Bib=' + str(k + 1))
                 ax.axvline(index, color="r", linestyle='--')
 
@@ -343,13 +342,13 @@ def read_dicom(filenm, ioptn):
         l_edge, index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
         r_edge, index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
 
-        print('top_edge', 'index_top', 'bot_edge', 'index_bot')
-        print(top_edge,
-              index_top,
-              bot_edge,
-              index_bot)
-        print('l_edge', 'index_l', 'r_edge', 'index_r')
-        print(l_edge, index_l, r_edge, index_r)
+        # print('top_edge', 'index_top', 'bot_edge', 'index_bot')
+        # print(top_edge,
+        #       index_top,
+        #       bot_edge,
+        #       index_bot)
+        # print('l_edge', 'index_l', 'r_edge', 'index_r')
+        # print(l_edge, index_l, r_edge, index_r)
 
         fig2 = plt.figure(figsize=(7, 5))  # this figure will show the vertical and horizontal calculated field size
         ax = fig2.subplots()
@@ -363,7 +362,7 @@ def read_dicom(filenm, ioptn):
         ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 2)*dy/10, 'Vfs='+str(round((height//2+index_bot-index_top)*dy/10, 2))+'cm', rotation=90, fontsize=14, color='r')
 
         #adding a horizontal arrow
-        print(index_l*dx, index_l, PROFILE['horizontal']*dy, PROFILE['horizontal'])
+        # print(index_l*dx, index_l, PROFILE['horizontal']*dy, PROFILE['horizontal'])
         ax.annotate(s='', xy=(index_l*dx/10, PROFILE['horizontal']*dy/10), xytext=((width // 2 + index_r)*dx/10, PROFILE['horizontal']*dy/10),
                     arrowprops=dict(arrowstyle='<->', color='r'))  # example on how to plota double headed arrow
         ax.text((width//2)*dx/10, (PROFILE['horizontal']+10)*dy/10, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10, 2))+'cm', rotation=0, fontsize=14, color='r')
@@ -441,16 +440,6 @@ def read_dicom(filenm, ioptn):
 
 
 
-
-
-#Data ipunt
-# try:
-#     filename = str(sys.argv[1])
-#     print('filename=',filename)
-# except:
-#     print('Please enter a valid directory name')
-#     print("Use the following command to run this script")
-#     print("python qc-LRCircleDet.py \"[filename]\" ")
 
 
 while True:  # example of infinite loops using try and except to catch only numbers
