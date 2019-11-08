@@ -304,7 +304,7 @@ def read_dicom(filenm, ioptn):
                 # x = np.linspace(0, 0 + (len(profile) * dx * 10), len(profile), endpoint=False)
                 ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
                 ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-                ax.scatter(xdet[k], ydet[k],print s=30, marker="P", color="y")
+                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
                 ax.set_title('Bib=' + str(k + 1))
                 ax.axvline(index, color="r", linestyle='--')
 
