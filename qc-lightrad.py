@@ -48,20 +48,15 @@
 
 
 import os
-import sys
 import pydicom
+import argparse
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
-import cv2
-from skimage.feature import blob_dog, blob_log, blob_doh
+from skimage.feature import blob_log
 from matplotlib.backends.backend_pdf import PdfPages
-from scipy import signal, misc
 from PIL import Image
 from tqdm import tqdm
-import argparse
 import utils as u
-# matplotlib.use('Qt5Agg')
 
 
 
@@ -85,17 +80,17 @@ def point_detect(imcirclist):
         grey_ampRegion = []
         for blob in blobs_log:
             y, x, r = blob
-            center = (int(x), int(y))
+            # center = (int(x), int(y))
             centerXRegion.append(x)
             centerYRegion.append(y)
             centerRRegion.append(r)
             grey_ampRegion.append(grey_img[int(y), int(x)])
-            radius = int(r)
+            # radius = int(r)
             # print('center=', center, 'radius=', radius, 'value=', img[center], grey_img[center])
 
         xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
         yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
-        rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
+        # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
 
 
         detCenterXRegion.append(xindx)
@@ -105,7 +100,7 @@ def point_detect(imcirclist):
         k = k + 1
 
 
-    return detCenterXRegion,detCenterYRegion
+    return detCenterXRegion, detCenterYRegion
 
 
 
@@ -114,13 +109,13 @@ def point_detect(imcirclist):
 
 
 
-def read_dicom(filename,ioption):
-    dataset = pydicom.dcmread(filename)
+def read_dicom(filenm, ioptn):
+    dataset = pydicom.dcmread(filenm)
     ArrayDicom = np.zeros((dataset.Rows, dataset.Columns), dtype=dataset.pixel_array.dtype)
     ArrayDicom = dataset.pixel_array
     SID = dataset.RTImageSID
-    print('array_shape=',np.shape(ArrayDicom))
-    height=np.shape(ArrayDicom)[0]
+    print('array_shape=', np.shape(ArrayDicom))
+    height = np.shape(ArrayDicom)[0]
     width = np.shape(ArrayDicom)[1]
     dx = 1 / (SID * (1 / dataset.ImagePlanePixelSpacing[0]) / 1000)
     dy = 1 / (SID * (1 / dataset.ImagePlanePixelSpacing[1]) / 1000)
@@ -138,22 +133,22 @@ def read_dicom(filename,ioption):
     # plt.ylabel('y distance [cm]')
     # plt.show()
 
-    if ioption.startswith(('y', 'yeah', 'yes')):
+    if ioptn.startswith(('y', 'yeah', 'yes')):
         height, width = ArrayDicom.shape
-        ArrayDicom_mod=ArrayDicom[:,width//2-height//2:width//2+height//2]
+        ArrayDicom_mod = ArrayDicom[:, width//2-height//2:width//2+height//2]
     else:
-        ArrayDicom_mod=ArrayDicom
+        ArrayDicom_mod = ArrayDicom
 
 
     #we take a diagonal profile to avoid phantom artifacts
-    im_profile = ArrayDicom_mod.diagonal()
+    # im_profile = ArrayDicom_mod.diagonal()
 
 
 
 
     #test to make sure image is displayed correctly bibs are high amplitude against dark background
-    ctr_pixel=ArrayDicom_mod[height//2,width//2]
-    corner_pixel=ArrayDicom_mod[0,0]
+    ctr_pixel = ArrayDicom_mod[height//2, width//2]
+    corner_pixel = ArrayDicom_mod[0, 0]
 
     if ctr_pixel > corner_pixel:
         ArrayDicom = u.range_invert(ArrayDicom)
@@ -163,7 +158,7 @@ def read_dicom(filename,ioption):
 
 
     # working on transforming the full image and invert it first and go from there.
-    if ioption.startswith(('y', 'yeah', 'yes')):
+    if ioptn.startswith(('y', 'yeah', 'yes')):
         ROI1 = {'edge_top': 70, 'edge_bottom': 130, 'edge_left': 270, 'edge_right': 350}
         ROI2 = {'edge_top': 70, 'edge_bottom': 130, 'edge_left': 680, 'edge_right': 760}
         ROI3 = {'edge_top': 150, 'edge_bottom': 210, 'edge_left': 760, 'edge_right': 830}
@@ -185,7 +180,7 @@ def read_dicom(filename,ioption):
 
     #images for object detection
     imcirclist = []
-    imcirc1 = Image.fromarray(255*ArrayDicom[ROI1['edge_top']:ROI1['edge_bottom'],ROI1['edge_left']:ROI1['edge_right'] ])
+    imcirc1 = Image.fromarray(255*ArrayDicom[ROI1['edge_top']:ROI1['edge_bottom'], ROI1['edge_left']:ROI1['edge_right']])
     imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
 
     imcirc2 = Image.fromarray(255 * ArrayDicom[ROI2['edge_top']:ROI2['edge_bottom'], ROI2['edge_left']:ROI2['edge_right']])
@@ -223,14 +218,14 @@ def read_dicom(filename,ioption):
     xdet, ydet = point_detect(imcirclist)
 
     profiles = []
-    profile1 = np.array(imcirc1, dtype=np.uint8)[:,xdet[0]]/255
-    profile2 = np.array(imcirc2, dtype=np.uint8)[:,xdet[1]]/255
-    profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2],:]/255
-    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3],:]/255
-    profile5 = np.array(imcirc5, dtype=np.uint8)[:,xdet[4]]/255
-    profile6 = np.array(imcirc6, dtype=np.uint8)[:,xdet[5]]/255
-    profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6],:]/255
-    profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7],:]/255
+    profile1 = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]]/255
+    profile2 = np.array(imcirc2, dtype=np.uint8)[:, xdet[1]]/255
+    profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2], :]/255
+    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3], :]/255
+    profile5 = np.array(imcirc5, dtype=np.uint8)[:, xdet[4]]/255
+    profile6 = np.array(imcirc6, dtype=np.uint8)[:, xdet[5]]/255
+    profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6], :]/255
+    profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7], :]/255
 
     profiles.append(profile1)
     profiles.append(profile2)
@@ -244,61 +239,61 @@ def read_dicom(filename,ioption):
 
 
 
-    k=0
+    k = 0
     fig = plt.figure(figsize=(7, 9))# this figure will hold the bibs
     plt.subplots_adjust(hspace=0.35)
 
     #getting a profile to extract max value to normalize
-    print('volume=',np.shape(ArrayDicom)[0]/2)
+    print('volume=', np.shape(ArrayDicom)[0]/2)
 
     #creating the page to write the results
-    dirname = os.path.dirname(filename)
+    dirname = os.path.dirname(filenm)
     print(dirname)
 
     #tolerance levels to change at will
-    tol=1.0 #tolearance level
-    act=2.0 #action level
-    phantom_distance =3.0 # distance from the bib to the edge of the phantom
+    tol = 1.0 #tolearance level
+    act = 2.0 #action level
+    phantom_distance = 3.0 # distance from the bib to the edge of the phantom
 
     with PdfPages(dirname + '/' + 'Light-rad_report.pdf') as pdf:
         Page = plt.figure(figsize=(4, 5))
-        Page.text(0.45, 0.9, 'Report',size=18)
+        Page.text(0.45, 0.9, 'Report', size=18)
         kk = 0 #counter for data points
         for profile in profiles:
-            value_near,index = u.find_nearest(profile, 0.5) # find the 50% amplitude point
+            _, index = u.find_nearest(profile, 0.5) # find the 50% amplitude point
+            # value_near, index = u.find_nearest(profile, 0.5) # find the 50% amplitude point
 
-
-            if k==0 or k==1 or k==4 or k==5: #there are the bibs in the horizontal
-                offset_value_y=round(abs((ydet[k]-index)*(dy/10))-phantom_distance, 2)
+            if k == 0 or k == 1 or k == 4 or k == 5: #there are the bibs in the horizontal #pylint: disable = consider-using-in
+                offset_value_y = round(abs((ydet[k]-index)*(dy/10))-phantom_distance, 2)
 
                 txt = str(offset_value_y)
-                print('offset_value_y=',offset_value_y)
+                print('offset_value_y=', offset_value_y)
                 if abs(offset_value_y) <= tol:
-                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm', color='g')
                 elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
                 else:
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
-                y = np.linspace(0, 0 + (len(profile) * dy *10 ), len(profile), endpoint=False)
+                # y = np.linspace(0, 0 + (len(profile) * dy *10), len(profile), endpoint=False)
                 ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
                 ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-                ax.scatter(xdet[k], ydet[k],s=30, marker="P", color="y")
+                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
                 ax.set_title('Bib=' + str(k + 1))
-                ax.axhline(index,color="r", linestyle='--')
+                ax.axhline(index, color="r", linestyle='--')
                 # plt.figure()
                 # plt.scatter(y,profile)
                 # plt.scatter(index*dy*10,value_near)
                 # plt.axvline((ydet[k]-1)*dy*10)
                 # plt.show()
             else:
-                offset_value_x=round(abs((xdet[k] - index) * (dx/10))-phantom_distance, 2)
+                offset_value_x = round(abs((xdet[k] - index) * (dx/10))-phantom_distance, 2)
 
                 txt = str(offset_value_x)
                 if abs(offset_value_x) <= tol:
                     print('1')
-                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm',color='g')
+                    Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk+1) + ' offset=' + txt + ' mm', color='g')
                 elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
                     print('2')
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='y')
@@ -307,14 +302,14 @@ def read_dicom(filename,ioption):
                     Page.text(0.1, 0.8 - kk / 10, 'Point' + str(kk + 1) + ' offset=' + txt + ' mm', color='r')
                 kk = kk + 1
 
-                x = np.linspace(0, 0 + (len(profile) * dx* 10), len(profile), endpoint=False)
+                # x = np.linspace(0, 0 + (len(profile) * dx * 10), len(profile), endpoint=False)
                 ax = fig.add_subplot(4, 2, k + 1)  # plotting all the figures in a single plot
                 ax.imshow(np.array(imcirclist[k], dtype=np.uint8)/255)
-                ax.scatter(xdet[k], ydet[k],s=30, marker="P", color="y")
+                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
                 ax.set_title('Bib=' + str(k + 1))
-                ax.axvline(index,color="r", linestyle='--')
+                ax.axvline(index, color="r", linestyle='--')
 
-            k=k+1
+            k = k+1
 
 
 
@@ -334,21 +329,21 @@ def read_dicom(filename,ioption):
 
 
 
-        if ioption.startswith(('y', 'yeah', 'yes')):
-            PROFILE={'horizontal':500,'vertical':430} # location to extract the horizontal and vertical profiles if this is a linac
+        if ioptn.startswith(('y', 'yeah', 'yes')):
+            PROFILE = {'horizontal': 270, 'vertical': 430} # location to extract the horizontal and vertical profiles if this is a linac
         else:
-            PROFILE={'horizontal':470,'vertical':510} # location to extract the horizontal and vertical profiles if this is a true beam
+            PROFILE = {'horizontal': 470, 'vertical': 510} # location to extract the horizontal and vertical profiles if this is a true beam
 
         profilehorz = np.array(im, dtype=np.uint8)[PROFILE['horizontal'], :] / 255    # we need to change these limits on a less specific criteria
         profilevert = np.array(im, dtype=np.uint8)[:, PROFILE['vertical']] / 255
 
-        top_edge,index_top= u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
-        bot_edge,index_bot= u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
+        top_edge, index_top = u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
+        bot_edge, index_bot = u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
 
-        l_edge,index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
-        r_edge,index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
+        l_edge, index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
+        r_edge, index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
 
-        print('top_edge','index_top','bot_edge','index_bot')
+        print('top_edge', 'index_top', 'bot_edge', 'index_bot')
         print(top_edge,
               index_top,
               bot_edge,
@@ -356,7 +351,7 @@ def read_dicom(filename,ioption):
         print('l_edge', 'index_l', 'r_edge', 'index_r')
         print(l_edge, index_l, r_edge, index_r)
 
-        fig2 = plt.figure(figsize=(7,5))  # this figure will show the vertical and horizontal calculated field size
+        fig2 = plt.figure(figsize=(7, 5))  # this figure will show the vertical and horizontal calculated field size
         ax = fig2.subplots()
         ax.imshow(ArrayDicom, extent=extent, origin='upper')
         ax.set_xlabel('x distance [cm]')
@@ -364,14 +359,14 @@ def read_dicom(filename,ioption):
         # ax.imshow(ArrayDicom)
 
         #adding a vertical arrow
-        ax.annotate(s='', xy=(PROFILE['vertical']*dx/10,index_top*dy/10 ), xytext=(PROFILE['vertical']*dx/10,(height//2+index_bot)*dy/10), arrowprops=dict(arrowstyle='<->',color='r')) # example on how to plot a double headed arrow
-        ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 2)*dy/10,'Vfs='+str(round((height//2+index_bot-index_top)*dy/10,2))+'cm',rotation=90, fontsize=14, color='r')
+        ax.annotate(s='', xy=(PROFILE['vertical']*dx/10, index_top*dy/10), xytext=(PROFILE['vertical']*dx/10, (height//2+ index_bot)*dy/10), arrowprops=dict(arrowstyle='<->', color='r')) # example on how to plot a double headed arrow
+        ax.text((PROFILE['vertical'] + 10)*dx/10, (height // 2)*dy/10, 'Vfs='+str(round((height//2+index_bot-index_top)*dy/10, 2))+'cm', rotation=90, fontsize=14, color='r')
 
         #adding a horizontal arrow
-        print(index_l*dx,index_l,PROFILE['horizontal']*dy,PROFILE['horizontal'])
-        ax.annotate(s='', xy=(index_l*dx/10,PROFILE['horizontal']*dy/10), xytext=((width // 2 + index_r)*dx/10,PROFILE['horizontal']*dy/10),
-                    arrowprops=dict(arrowstyle='<->',color='r'))  # example on how to plota double headed arrow
-        ax.text((width//2)*dx/10, (PROFILE['horizontal']+10)*dy/10, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10,2))+'cm', rotation=0, fontsize=14, color='r')
+        print(index_l*dx, index_l, PROFILE['horizontal']*dy, PROFILE['horizontal'])
+        ax.annotate(s='', xy=(index_l*dx/10, PROFILE['horizontal']*dy/10), xytext=((width // 2 + index_r)*dx/10, PROFILE['horizontal']*dy/10),
+                    arrowprops=dict(arrowstyle='<->', color='r'))  # example on how to plota double headed arrow
+        ax.text((width//2)*dx/10, (PROFILE['horizontal']+10)*dy/10, 'Hfs='+str(round((width // 2 + index_r-index_l)*dx/10, 2))+'cm', rotation=0, fontsize=14, color='r')
 
 
 
@@ -467,89 +462,16 @@ while True:  # example of infinite loops using try and except to catch only numb
         if ioption.startswith(('y', 'yeah', 'yes', 'n', 'no', 'nope')):
             break
 
-    except:
+    except:  #pylint: disable = bare-except
         print('Please enter a valid option:')
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file',type=str,help="Input the Light/Rad file")
-args=parser.parse_args()
+parser.add_argument('file', type=str, help="Input the Light/Rad file")
+args = parser.parse_args()
 
-filename=args.file
-
-
-
-read_dicom(filename,ioption)
+filename = args.file
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# **************EXAMPLES***************************
-# ## Select boxes
-# bboxes = []
-# colors = []
-#
-# # OpenCV's selectROI function doesn't work for selecting multiple objects in Python
-# # So we will call this function in a loop till we are done selecting all objects
-# while True:
-#     # draw bounding boxes over objects
-#     # selectROI's default behaviour is to draw box starting from the center
-#     # when fromCenter is set to false, you can draw box starting from top left corner
-#     bbox = cv2.selectROI('MultiTracker', LightRadEq)
-#     bboxes.append(bbox)
-#     colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
-#     print("Press q to quit selecting boxes and start tracking")
-#     print("Press any other key to select next object")
-#     k = cv2.waitKey(0) & 0xFF
-#     if (k == 113):  # q is pressed
-#         break
-#
-# print('Selected bounding boxes {}'.format(bboxes))
-
-# faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-# for (x, y, w, h) in faces:
-#     cv.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-#     roi_gray = gray[y:y + h, x:x + w]
-#     roi_color = img[y:y + h, x:x + w]
-#     eyes = eye_cascade.detectMultiScale(roi_gray)
-#     for (ex, ey, ew, eh) in eyes:
-#         cv.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
-# cv.imshow('img', img)
-# cv.waitKey(0)
-# cv.destroyAllWindows()
-# **************EXAMPLES***************************
-
-
-
-
-
-
-
-
-
+read_dicom(filename, ioption)
