@@ -45,9 +45,9 @@
 #
 ###########################################################################################
 
-
 import argparse
 import os
+from datetime import datetime
 
 from tqdm import tqdm
 
@@ -62,8 +62,6 @@ from skimage.feature import blob_log
 import pydicom
 
 import utils as u
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "utils"))
 
 
 def point_detect(imcirclist):
@@ -106,6 +104,8 @@ def point_detect(imcirclist):
 
 def read_dicom(filenm, ioptn):
     dataset = pydicom.dcmread(filenm)
+    now = datetime.now()
+
     ArrayDicom = np.zeros(
         (dataset.Rows, dataset.Columns), dtype=dataset.pixel_array.dtype
     )
@@ -123,9 +123,12 @@ def read_dicom(filenm, ioptn):
     extent = (
         0,
         0 + (ArrayDicom.shape[1] * dx / 10),
-        0,
         0 + (ArrayDicom.shape[0] * dy / 10),
+        0,
     )
+
+    # creating the figure extent list for the bib images
+    list_extent = []
 
     # plt.figure()
     # plt.imshow(ArrayDicom, extent=extent, origin='upper')
@@ -255,6 +258,15 @@ def read_dicom(filenm, ioptn):
     )
     imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
 
+    list_extent.append(
+        (
+            (ROI1["edge_left"] * dx / 10),
+            (ROI1["edge_right"] * dx / 10),
+            (ROI1["edge_bottom"] * dy / 10),
+            (ROI1["edge_top"] * dy / 10),
+        )
+    )
+
     imcirc2 = Image.fromarray(
         255
         * ArrayDicom[
@@ -264,6 +276,15 @@ def read_dicom(filenm, ioptn):
     )
     imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
 
+    list_extent.append(
+        (
+            (ROI2["edge_left"] * dx / 10),
+            (ROI2["edge_right"] * dx / 10),
+            (ROI2["edge_bottom"] * dy / 10),
+            (ROI2["edge_top"] * dy / 10),
+        )
+    )
+
     imcirc3 = Image.fromarray(
         255
         * ArrayDicom[
@@ -272,6 +293,14 @@ def read_dicom(filenm, ioptn):
         ]
     )
     imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
+    list_extent.append(
+        (
+            (ROI3["edge_left"] * dx / 10),
+            (ROI3["edge_right"] * dx / 10),
+            (ROI3["edge_bottom"] * dy / 10),
+            (ROI3["edge_top"] * dy / 10),
+        )
+    )
 
     imcirc4 = Image.fromarray(
         255
@@ -282,6 +311,15 @@ def read_dicom(filenm, ioptn):
     )
     imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
 
+    list_extent.append(
+        (
+            (ROI4["edge_left"] * dx / 10),
+            (ROI4["edge_right"] * dx / 10),
+            (ROI4["edge_bottom"] * dy / 10),
+            (ROI4["edge_top"] * dy / 10),
+        )
+    )
+
     imcirc5 = Image.fromarray(
         255
         * ArrayDicom[
@@ -290,6 +328,15 @@ def read_dicom(filenm, ioptn):
         ]
     )
     imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
+
+    list_extent.append(
+        (
+            (ROI5["edge_left"] * dx / 10),
+            (ROI5["edge_right"] * dx / 10),
+            (ROI5["edge_bottom"] * dy / 10),
+            (ROI5["edge_top"] * dy / 10),
+        )
+    )
 
     imcirc6 = Image.fromarray(
         255
@@ -300,6 +347,15 @@ def read_dicom(filenm, ioptn):
     )
     imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
 
+    list_extent.append(
+        (
+            (ROI6["edge_left"] * dx / 10),
+            (ROI6["edge_right"] * dx / 10),
+            (ROI6["edge_bottom"] * dy / 10),
+            (ROI6["edge_top"] * dy / 10),
+        )
+    )
+
     imcirc7 = Image.fromarray(
         255
         * ArrayDicom[
@@ -309,6 +365,15 @@ def read_dicom(filenm, ioptn):
     )
     imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
 
+    list_extent.append(
+        (
+            (ROI7["edge_left"] * dx / 10),
+            (ROI7["edge_right"] * dx / 10),
+            (ROI7["edge_bottom"] * dy / 10),
+            (ROI7["edge_top"] * dy / 10),
+        )
+    )
+
     imcirc8 = Image.fromarray(
         255
         * ArrayDicom[
@@ -317,6 +382,15 @@ def read_dicom(filenm, ioptn):
         ]
     )
     imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
+
+    list_extent.append(
+        (
+            (ROI8["edge_left"] * dx / 10),
+            (ROI8["edge_right"] * dx / 10),
+            (ROI8["edge_bottom"] * dy / 10),
+            (ROI8["edge_top"] * dy / 10),
+        )
+    )
 
     imcirclist.append(imcirc1)
     imcirclist.append(imcirc2)
@@ -349,28 +423,30 @@ def read_dicom(filenm, ioptn):
     profiles.append(profile8)
 
     k = 0
-    fig = plt.figure(figsize=(7, 9))  # this figure will hold the bibs
+    fig = plt.figure(figsize=(8, 12))  # this figure will hold the bibs
     plt.subplots_adjust(hspace=0.35)
-
-    # getting a profile to extract max value to normalize
-    # print('volume=', np.shape(ArrayDicom)[0]/2)
 
     # creating the page to write the results
     dirname = os.path.dirname(filenm)
-    # print(dirname)
 
     # tolerance levels to change at will
     tol = 1.0  # tolearance level
     act = 2.0  # action level
     phantom_distance = 3.0  # distance from the bib to the edge of the phantom
 
-    with PdfPages(dirname + "/" + "Light-rad_report.pdf") as pdf:
+    with PdfPages(
+        dirname
+        + "/"
+        + now.strftime("%d-%m-%Y_%H:%M_")
+        + dataset[0x0008, 0x1010].value
+        + "_Lightrad_report.pdf"
+    ) as pdf:
         Page = plt.figure(figsize=(4, 5))
         Page.text(0.45, 0.9, "Report", size=18)
         kk = 0  # counter for data points
         for profile in profiles:
             _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
-            # value_near, index = u.find_nearest(profile, 0.5) # find the 50% amplitude point
+            # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
 
             if (  # pylint: disable = consider-using-in
                 k == 0 or k == 1 or k == 4 or k == 5
@@ -404,19 +480,28 @@ def read_dicom(filenm, ioptn):
                     )
                 kk = kk + 1
 
-                # y = np.linspace(0, 0 + (len(profile) * dy *10), len(profile), endpoint=False)
                 ax = fig.add_subplot(
                     4, 2, k + 1
                 )  # plotting all the figures in a single plot
-                ax.imshow(np.array(imcirclist[k], dtype=np.uint8) / 255)
-                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
+
+                ax.imshow(
+                    np.array(imcirclist[k], dtype=np.uint8) / 255,
+                    extent=list_extent[k],
+                    origin="upper",
+                )
+                ax.scatter(
+                    list_extent[k][0] + xdet[k] * dx / 100,
+                    list_extent[k][3] + ydet[k] * dy / 100,
+                    s=30,
+                    marker="P",
+                    color="y",
+                )
                 ax.set_title("Bib=" + str(k + 1))
-                ax.axhline(index, color="r", linestyle="--")
-                # plt.figure()
-                # plt.scatter(y,profile)
-                # plt.scatter(index*dy*10,value_near)
-                # plt.axvline((ydet[k]-1)*dy*10)
-                # plt.show()
+                ax.axhline(
+                    list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
+                )
+                ax.set_xlabel("x distance [cm]")
+                ax.set_ylabel("y distance [cm]")
             else:
                 offset_value_x = round(
                     abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
@@ -449,24 +534,33 @@ def read_dicom(filenm, ioptn):
                     )
                 kk = kk + 1
 
-                # x = np.linspace(0, 0 + (len(profile) * dx * 10), len(profile), endpoint=False)
                 ax = fig.add_subplot(
                     4, 2, k + 1
                 )  # plotting all the figures in a single plot
-                ax.imshow(np.array(imcirclist[k], dtype=np.uint8) / 255)
-                ax.scatter(xdet[k], ydet[k], s=30, marker="P", color="y")
+
+                ax.imshow(
+                    np.array(imcirclist[k], dtype=np.uint8) / 255,
+                    extent=list_extent[k],
+                    origin="upper",
+                )
+                ax.scatter(
+                    list_extent[k][0] + xdet[k] * dx / 100,
+                    list_extent[k][3] + ydet[k] * dy / 100,
+                    s=30,
+                    marker="P",
+                    color="y",
+                )
                 ax.set_title("Bib=" + str(k + 1))
-                ax.axvline(index, color="r", linestyle="--")
+                ax.axvline(
+                    list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
+                )
+                ax.set_xlabel("x distance [cm]")
+                ax.set_ylabel("y distance [cm]")
 
             k = k + 1
 
         pdf.savefig()
         pdf.savefig(fig)
-
-        # plt.figure()
-        # plt.imshow(255*ArrayDicom)
-        # plt.show()
-        # exit(0)
 
         # we now need to select a horizontal and a vertical profile to find the edge of the field from an image
         # for the field size calculation
@@ -488,8 +582,8 @@ def read_dicom(filenm, ioptn):
         )  # we need to change these limits on a less specific criteria
         profilevert = np.array(im, dtype=np.uint8)[:, PROFILE["vertical"]] / 255
 
-        # top_edge, index_top = u.find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
-        # bot_edge, index_bot = u.find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
+        # top_edge, index_top = find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
+        # bot_edge, index_bot = find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
         _, index_top = u.find_nearest(
             profilevert[0 : height // 2], 0.5
         )  # finding the edge of the field on the top
@@ -497,22 +591,14 @@ def read_dicom(filenm, ioptn):
             profilevert[height // 2 : height], 0.5
         )  # finding the edge of the field on the bottom
 
-        # l_edge, index_l = u.find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
-        # r_edge, index_r = u.find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
+        # l_edge, index_l = find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
+        # r_edge, index_r = find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
         _, index_l = u.find_nearest(
             profilehorz[0 : width // 2], 0.5
         )  # finding the edge of the field on the bottom
         _, index_r = u.find_nearest(
             profilehorz[width // 2 : width], 0.5
         )  # finding the edge of the field on the right
-
-        # print('top_edge', 'index_top', 'bot_edge', 'index_bot')
-        # print(top_edge,
-        #       index_top,
-        #       bot_edge,
-        #       index_bot)
-        # print('l_edge', 'index_l', 'r_edge', 'index_r')
-        # print(l_edge, index_l, r_edge, index_r)
 
         fig2 = plt.figure(
             figsize=(7, 5)
@@ -521,7 +607,6 @@ def read_dicom(filenm, ioptn):
         ax.imshow(ArrayDicom, extent=extent, origin="upper")
         ax.set_xlabel("x distance [cm]")
         ax.set_ylabel("y distance [cm]")
-        # ax.imshow(ArrayDicom)
 
         # adding a vertical arrow
         ax.annotate(
@@ -532,7 +617,7 @@ def read_dicom(filenm, ioptn):
         )  # example on how to plot a double headed arrow
         ax.text(
             (PROFILE["vertical"] + 10) * dx / 10,
-            (height // 2) * dy / 10,
+            (height // 1.25) * dy / 10,
             "Vfs="
             + str(round((height // 2 + index_bot - index_top) * dy / 10, 2))
             + "cm",
@@ -548,10 +633,10 @@ def read_dicom(filenm, ioptn):
             xy=(index_l * dx / 10, PROFILE["horizontal"] * dy / 10),
             xytext=((width // 2 + index_r) * dx / 10, PROFILE["horizontal"] * dy / 10),
             arrowprops=dict(arrowstyle="<->", color="r"),
-        )  # example on how to plota double headed arrow
+        )  # example on how to plot a double headed arrow
         ax.text(
             (width // 2) * dx / 10,
-            (PROFILE["horizontal"] + 10) * dy / 10,
+            (PROFILE["horizontal"] - 10) * dy / 10,
             "Hfs=" + str(round((width // 2 + index_r - index_l) * dx / 10, 2)) + "cm",
             rotation=0,
             fontsize=14,
@@ -560,39 +645,24 @@ def read_dicom(filenm, ioptn):
 
         pdf.savefig(fig2)
 
-    # # Normal mode:
-    # print()
-    # print("Directory folder.........:", dirname)
-    # print("Storage type.....:", dataset.SOPClassUID)
-    # print()
-    #
-    # pat_name = dataset.PatientName
-    # display_name = pat_name.family_name + ", " + pat_name.given_name
-    # print("Patient's name...:", display_name)
-    # print("Patient id.......:", dataset.PatientID)
-    # print("Modality.........:", dataset.Modality)
-    # print("Study Date.......:", dataset.StudyDate)
-    # print("Gantry angle......", dataset.GantryAngle)
 
+if __name__ == "__main__":
+    while True:  # example of infinite loops using try and except to catch only numbers
+        line = input("Are these files from a clinac [yes(y)/no(n)]> ")
+        try:
+            ##        if line == 'done':
+            ##            break
+            ioption = str(line.lower())
+            if ioption.startswith(("y", "yeah", "yes", "n", "no", "nope")):
+                break
 
-while True:  # example of infinite loops using try and except to catch only numbers
-    line = input("Are these files from a clinac [yes(y)/no(n)]> ")
-    try:
-        ##        if line == 'done':
-        ##            break
-        ioption = str(line.lower())
-        if ioption.startswith(("y", "yeah", "yes", "n", "no", "nope")):
-            break
+        except:  # pylint: disable = bare-except
+            print("Please enter a valid option:")
 
-    except:  # pylint: disable = bare-except
-        print("Please enter a valid option:")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", type=str, help="Input the Light/Rad file")
+    args = parser.parse_args()
 
+    filename = args.file
 
-parser = argparse.ArgumentParser()
-parser.add_argument("file", type=str, help="Input the Light/Rad file")
-args = parser.parse_args()
-
-filename = args.file
-
-
-read_dicom(filename, ioption)
+    read_dicom(filename, ioption)
