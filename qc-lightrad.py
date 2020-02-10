@@ -438,7 +438,7 @@ def read_dicom(filenm, ioptn):
     if platform == "linux":
         output_flnm=dirname+ "/"+ now.strftime("%d-%m-%Y_%H:%M_")+ dataset[0x0008, 0x1010].value+ "_Lightrad_report.pdf"
     elif platform == "win32":
-        output_flnm=dirname+ "/"+ now.strftime("%d-%m-%Y_%H:%M_")+ dataset[0x0008, 0x1010].value+ "_Lightrad_report.pdf"
+        output_flnm=now.strftime("%d-%m-%Y_%H:%M_")+ dataset[0x0008, 0x1010].value+ "_Lightrad_report.pdf"
 
     print('Writing to:',output_flnm)
 
