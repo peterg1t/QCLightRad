@@ -61,9 +61,9 @@ from PIL import Image
 from skimage.feature import blob_log
 
 import pydicom
-
+import roi_sel as roi
 import utils as u
-
+import inquirer 
 
 def point_detect(imcirclist):
     k = 0
@@ -158,270 +158,46 @@ def read_dicom(filenm, ioptn):
 
     ArrayDicom = u.norm01(ArrayDicom)
 
-    # working on transforming the full image and invert it first and go from there.
-    if ioptn.startswith(("y", "yeah", "yes")):
-        ROI1 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 270, "edge_right": 350}
-        ROI2 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 680, "edge_right": 760}
-        ROI3 = {
-            "edge_top": 150,
-            "edge_bottom": 210,
-            "edge_left": 760,
-            "edge_right": 830,
-        }
-        ROI4 = {
-            "edge_top": 560,
-            "edge_bottom": 620,
-            "edge_left": 760,
-            "edge_right": 830,
-        }
-        ROI5 = {
-            "edge_top": 640,
-            "edge_bottom": 700,
-            "edge_left": 680,
-            "edge_right": 760,
-        }
-        ROI6 = {
-            "edge_top": 640,
-            "edge_bottom": 700,
-            "edge_left": 270,
-            "edge_right": 350,
-        }
-        ROI7 = {
-            "edge_top": 560,
-            "edge_bottom": 620,
-            "edge_left": 200,
-            "edge_right": 270,
-        }
-        ROI8 = {
-            "edge_top": 150,
-            "edge_bottom": 210,
-            "edge_left": 200,
-            "edge_right": 270,
-        }
-    else:
-        ROI1 = {
-            "edge_top": 280,
-            "edge_bottom": 360,
-            "edge_left": 360,
-            "edge_right": 440,
-        }
-        ROI2 = {
-            "edge_top": 280,
-            "edge_bottom": 360,
-            "edge_left": 830,
-            "edge_right": 910,
-        }
-        ROI3 = {
-            "edge_top": 360,
-            "edge_bottom": 440,
-            "edge_left": 940,
-            "edge_right": 1020,
-        }
-        ROI4 = {
-            "edge_top": 840,
-            "edge_bottom": 920,
-            "edge_left": 940,
-            "edge_right": 1020,
-        }
-        ROI5 = {
-            "edge_top": 930,
-            "edge_bottom": 1000,
-            "edge_left": 830,
-            "edge_right": 910,
-        }
-        ROI6 = {
-            "edge_top": 930,
-            "edge_bottom": 1000,
-            "edge_left": 360,
-            "edge_right": 440,
-        }
-        ROI7 = {
-            "edge_top": 840,
-            "edge_bottom": 920,
-            "edge_left": 280,
-            "edge_right": 360,
-        }
-        ROI8 = {
-            "edge_top": 360,
-            "edge_bottom": 440,
-            "edge_left": 280,
-            "edge_right": 360,
-        }
 
-    # images for object detection
-    imcirclist = []
-    imcirc1 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI1["edge_top"] : ROI1["edge_bottom"],
-            ROI1["edge_left"] : ROI1["edge_right"],
-        ]
-    )
-    imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
 
-    list_extent.append(
-        (
-            (ROI1["edge_left"] * dx / 10),
-            (ROI1["edge_right"] * dx / 10),
-            (ROI1["edge_bottom"] * dy / 10),
-            (ROI1["edge_top"] * dy / 10),
+
+
+
+
+    #Here we need to select the correct ROIs for the image processing since in the FC-2 phantom the bibs are in the corners we will select more than 1 ROI per-bib maybe??
+
+
+
+    questions = [
+        inquirer.List(
+            "type",
+            message="Select the phantom",
+            choices=[
+                "IsoAlign",
+                "FC-2",
+                "GP-1",
+            ],
         )
-    )
+    ]
+    answers = inquirer.prompt(questions)
+    print(answers["type"])
 
-    imcirc2 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI2["edge_top"] : ROI2["edge_bottom"],
-            ROI2["edge_left"] : ROI2["edge_right"],
-        ]
-    )
-    imcirc2 = imcirc2.resize((imcirc2.width * 10, imcirc2.height * 10), Image.LANCZOS)
+    if answers["type"] == "IsoAlign":
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy)
+    elif answers["type"] == "FC-2":
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_FC2(ArrayDicom,ioption,dx,dy)
+    elif answers["type"] == "GP-1":
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_GP1(ArrayDicom,ioption,dx,dy)
 
-    list_extent.append(
-        (
-            (ROI2["edge_left"] * dx / 10),
-            (ROI2["edge_right"] * dx / 10),
-            (ROI2["edge_bottom"] * dy / 10),
-            (ROI2["edge_top"] * dy / 10),
-        )
-    )
 
-    imcirc3 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI3["edge_top"] : ROI3["edge_bottom"],
-            ROI3["edge_left"] : ROI3["edge_right"],
-        ]
-    )
-    imcirc3 = imcirc3.resize((imcirc3.width * 10, imcirc3.height * 10), Image.LANCZOS)
-    list_extent.append(
-        (
-            (ROI3["edge_left"] * dx / 10),
-            (ROI3["edge_right"] * dx / 10),
-            (ROI3["edge_bottom"] * dy / 10),
-            (ROI3["edge_top"] * dy / 10),
-        )
-    )
 
-    imcirc4 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI4["edge_top"] : ROI4["edge_bottom"],
-            ROI4["edge_left"] : ROI4["edge_right"],
-        ]
-    )
-    imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
+    
+    # tolerance levels to change at will
+    tol = 1.0  # tolearance level
+    act = 2.0  # action level
+    phantom_distance = 10.0  # distance from the bib to the edge of the phantom in mm
 
-    list_extent.append(
-        (
-            (ROI4["edge_left"] * dx / 10),
-            (ROI4["edge_right"] * dx / 10),
-            (ROI4["edge_bottom"] * dy / 10),
-            (ROI4["edge_top"] * dy / 10),
-        )
-    )
 
-    imcirc5 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI5["edge_top"] : ROI5["edge_bottom"],
-            ROI5["edge_left"] : ROI5["edge_right"],
-        ]
-    )
-    imcirc5 = imcirc5.resize((imcirc5.width * 10, imcirc5.height * 10), Image.LANCZOS)
-
-    list_extent.append(
-        (
-            (ROI5["edge_left"] * dx / 10),
-            (ROI5["edge_right"] * dx / 10),
-            (ROI5["edge_bottom"] * dy / 10),
-            (ROI5["edge_top"] * dy / 10),
-        )
-    )
-
-    imcirc6 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI6["edge_top"] : ROI6["edge_bottom"],
-            ROI6["edge_left"] : ROI6["edge_right"],
-        ]
-    )
-    imcirc6 = imcirc6.resize((imcirc6.width * 10, imcirc6.height * 10), Image.LANCZOS)
-
-    list_extent.append(
-        (
-            (ROI6["edge_left"] * dx / 10),
-            (ROI6["edge_right"] * dx / 10),
-            (ROI6["edge_bottom"] * dy / 10),
-            (ROI6["edge_top"] * dy / 10),
-        )
-    )
-
-    imcirc7 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI7["edge_top"] : ROI7["edge_bottom"],
-            ROI7["edge_left"] : ROI7["edge_right"],
-        ]
-    )
-    imcirc7 = imcirc7.resize((imcirc7.width * 10, imcirc7.height * 10), Image.LANCZOS)
-
-    list_extent.append(
-        (
-            (ROI7["edge_left"] * dx / 10),
-            (ROI7["edge_right"] * dx / 10),
-            (ROI7["edge_bottom"] * dy / 10),
-            (ROI7["edge_top"] * dy / 10),
-        )
-    )
-
-    imcirc8 = Image.fromarray(
-        255
-        * ArrayDicom[
-            ROI8["edge_top"] : ROI8["edge_bottom"],
-            ROI8["edge_left"] : ROI8["edge_right"],
-        ]
-    )
-    imcirc8 = imcirc8.resize((imcirc8.width * 10, imcirc8.height * 10), Image.LANCZOS)
-
-    list_extent.append(
-        (
-            (ROI8["edge_left"] * dx / 10),
-            (ROI8["edge_right"] * dx / 10),
-            (ROI8["edge_bottom"] * dy / 10),
-            (ROI8["edge_top"] * dy / 10),
-        )
-    )
-
-    imcirclist.append(imcirc1)
-    imcirclist.append(imcirc2)
-    imcirclist.append(imcirc3)
-    imcirclist.append(imcirc4)
-    imcirclist.append(imcirc5)
-    imcirclist.append(imcirc6)
-    imcirclist.append(imcirc7)
-    imcirclist.append(imcirc8)
-
-    xdet, ydet = point_detect(imcirclist)
-
-    profiles = []
-    profile1 = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]] / 255
-    profile2 = np.array(imcirc2, dtype=np.uint8)[:, xdet[1]] / 255
-    profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2], :] / 255
-    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3], :] / 255
-    profile5 = np.array(imcirc5, dtype=np.uint8)[:, xdet[4]] / 255
-    profile6 = np.array(imcirc6, dtype=np.uint8)[:, xdet[5]] / 255
-    profile7 = np.array(imcirc7, dtype=np.uint8)[ydet[6], :] / 255
-    profile8 = np.array(imcirc8, dtype=np.uint8)[ydet[7], :] / 255
-
-    profiles.append(profile1)
-    profiles.append(profile2)
-    profiles.append(profile3)
-    profiles.append(profile4)
-    profiles.append(profile5)
-    profiles.append(profile6)
-    profiles.append(profile7)
-    profiles.append(profile8)
 
     k = 0
     fig = plt.figure(figsize=(8, 12))  # this figure will hold the bibs
@@ -430,10 +206,6 @@ def read_dicom(filenm, ioptn):
     # creating the page to write the results
     dirname = os.path.dirname(filenm)
 
-    # tolerance levels to change at will
-    tol = 1.0  # tolearance level
-    act = 2.0  # action level
-    phantom_distance = 3.0  # distance from the bib to the edge of the phantom
 
     if platform == "linux":
         output_flnm=dirname+ "/"+ now.strftime("%d-%m-%Y_%H:%M_")+ dataset[0x0008, 0x1010].value+ "_Lightrad_report.pdf"
@@ -451,117 +223,337 @@ def read_dicom(filenm, ioptn):
         for profile in profiles:
             _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
             # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
-
-            if (  # pylint: disable = consider-using-in
-                k == 0 or k == 1 or k == 4 or k == 5
-            ):  # there are the bibs in the horizontal
-                offset_value_y = round(
-                    abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
-                )
-
-                txt = str(offset_value_y)
-                # print('offset_value_y=', offset_value_y)
-                if abs(offset_value_y) <= tol:
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                        color="g",
+            if answers["type"] == "IsoAlign":
+                if (  # pylint: disable = consider-using-in
+                    k == 0 or k == 1 or k == 4 or k == 5
+                ):  # there are the bibs in the horizontal
+                    offset_value_y = round(
+                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
                     )
-                elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
+
+                    txt = str(offset_value_y)
+                    # print('offset_value_y=', offset_value_y)
+                    if abs(offset_value_y) <= tol:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
+
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
+
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
+                    )
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
                         color="y",
                     )
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axhline(
+                        list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
+                    )
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
                 else:
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                        color="r",
+                    offset_value_x = round(
+                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
                     )
-                kk = kk + 1
 
-                ax = fig.add_subplot(
-                    4, 2, k + 1
-                )  # plotting all the figures in a single plot
+                    txt = str(offset_value_x)
+                    if abs(offset_value_x) <= tol:
+                        # print('1')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
+                        # print('2')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        # print('3')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
 
-                ax.imshow(
-                    np.array(imcirclist[k], dtype=np.uint8) / 255,
-                    extent=list_extent[k],
-                    origin="upper",
-                )
-                ax.scatter(
-                    list_extent[k][0] + xdet[k] * dx / 100,
-                    list_extent[k][3] + ydet[k] * dy / 100,
-                    s=30,
-                    marker="P",
-                    color="y",
-                )
-                ax.set_title("Bib=" + str(k + 1))
-                ax.axhline(
-                    list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
-                )
-                ax.set_xlabel("x distance [cm]")
-                ax.set_ylabel("y distance [cm]")
-            else:
-                offset_value_x = round(
-                    abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
-                )
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
 
-                txt = str(offset_value_x)
-                if abs(offset_value_x) <= tol:
-                    # print('1')
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                        color="g",
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
                     )
-                elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
-                    # print('2')
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
                         color="y",
                     )
-                else:
-                    # print('3')
-                    Page.text(
-                        0.1,
-                        0.8 - kk / 10,
-                        "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                        color="r",
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axvline(
+                        list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
                     )
-                kk = kk + 1
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
 
-                ax = fig.add_subplot(
-                    4, 2, k + 1
-                )  # plotting all the figures in a single plot
+                k = k + 1
+            elif answers["type"] == "GP-1":
+                if (  # pylint: disable = consider-using-in
+                    k == 0 or k == 2 
+                ):  # there are the bibs in the horizontal
+                    offset_value_y = round(
+                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
+                    )
 
-                ax.imshow(
-                    np.array(imcirclist[k], dtype=np.uint8) / 255,
-                    extent=list_extent[k],
-                    origin="upper",
-                )
-                ax.scatter(
-                    list_extent[k][0] + xdet[k] * dx / 100,
-                    list_extent[k][3] + ydet[k] * dy / 100,
-                    s=30,
-                    marker="P",
-                    color="y",
-                )
-                ax.set_title("Bib=" + str(k + 1))
-                ax.axvline(
-                    list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
-                )
-                ax.set_xlabel("x distance [cm]")
-                ax.set_ylabel("y distance [cm]")
+                    txt = str(offset_value_y)
+                    # print('offset_value_y=', offset_value_y)
+                    if abs(offset_value_y) <= tol:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
 
-            k = k + 1
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
+
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
+                    )
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
+                        color="y",
+                    )
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axhline(
+                        list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
+                    )
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
+                else:
+                    offset_value_x = round(
+                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
+                    )
+
+                    txt = str(offset_value_x)
+                    if abs(offset_value_x) <= tol:
+                        # print('1')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
+                        # print('2')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        # print('3')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
+
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
+
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
+                    )
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
+                        color="y",
+                    )
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axvline(
+                        list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
+                    )
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
+
+                k = k + 1
+            elif answers["type"] == "FC-2":
+                for k in range(0,4):
+                    offset_value_y = round(
+                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
+                    )
+
+                    txt = str(offset_value_y)
+                    # print('offset_value_y=', offset_value_y)
+                    if abs(offset_value_y) <= tol:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
+
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
+
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
+                    )
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
+                        color="y",
+                    )
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axhline(
+                        list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
+                    )
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
+                    
+                    offset_value_x = round(
+                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
+                    )
+
+                    txt = str(offset_value_x)
+                    if abs(offset_value_x) <= tol:
+                        # print('1')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="g",
+                        )
+                    elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
+                        # print('2')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="y",
+                        )
+                    else:
+                        # print('3')
+                        Page.text(
+                            0.1,
+                            0.8 - kk / 10,
+                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            color="r",
+                        )
+                    kk = kk + 1
+
+                    ax = fig.add_subplot(
+                        4, 2, k + 1
+                    )  # plotting all the figures in a single plot
+
+                    ax.imshow(
+                        np.array(imcirclist[k], dtype=np.uint8) / 255,
+                        extent=list_extent[k],
+                        origin="upper",
+                    )
+                    ax.scatter(
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
+                        s=30,
+                        marker="P",
+                        color="y",
+                    )
+                    ax.set_title("Bib=" + str(k + 1))
+                    ax.axvline(
+                        list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
+                    )
+                    ax.set_xlabel("x distance [cm]")
+                    ax.set_ylabel("y distance [cm]")
+
+                k = k + 1
 
         pdf.savefig()
         pdf.savefig(fig)
