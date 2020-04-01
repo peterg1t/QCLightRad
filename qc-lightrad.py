@@ -49,21 +49,18 @@ import argparse
 import os
 from datetime import datetime
 from sys import platform
-
 from tqdm import tqdm
-
 import numpy as np
-
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
 from PIL import Image
 from skimage.feature import blob_log
-
 import pydicom
 import roi_sel as roi
 import utils as u
-import inquirer 
+import inquirer
+from timeit import default_timer as timer
+
 
 def point_detect(imcirclist):
     k = 0
@@ -103,7 +100,7 @@ def point_detect(imcirclist):
     return detCenterXRegion, detCenterYRegion
 
 
-def read_dicom(filenm, ioptn):
+def read_dicom(filenm):
     dataset = pydicom.dcmread(filenm)
     now = datetime.now()
 
@@ -138,11 +135,19 @@ def read_dicom(filenm, ioptn):
     # plt.ylabel('y distance [cm]')
     # plt.show()
 
-    if ioptn.startswith(("y", "yeah", "yes")):
+    print('np.shape_dim0',np.shape(ArrayDicom)[0])
+    if np.shape(ArrayDicom)[0] == 768: #Clinac
+        ioptn=1
+    elif np.shape(ArrayDicom)[0] == 1190: #Edge EPID
+        ioptn=2
+    elif np.shape(ArrayDicom)[0] == 1280: ##Varian XI (Edmonton)
+        ioptn=3
+
+
+
+    if ioptn == 1:
         height, width = ArrayDicom.shape
-        ArrayDicom_mod = ArrayDicom[
-            :, width // 2 - height // 2 : width // 2 + height // 2
-        ]
+        ArrayDicom_mod = ArrayDicom[:, width // 2 - height // 2 : width // 2 + height // 2]
     else:
         ArrayDicom_mod = ArrayDicom
 
@@ -157,7 +162,6 @@ def read_dicom(filenm, ioptn):
         ArrayDicom = u.range_invert(ArrayDicom)
 
     ArrayDicom = u.norm01(ArrayDicom)
-
 
 
 
@@ -183,11 +187,14 @@ def read_dicom(filenm, ioptn):
     print(answers["type"])
 
     if answers["type"] == "IsoAlign":
-        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy)
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_IsoAlign(ArrayDicom,ioptn,dx,dy)
     elif answers["type"] == "FC-2":
-        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_FC2(ArrayDicom,ioption,dx,dy)
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_FC2(ArrayDicom,ioptn,dx,dy)
     elif answers["type"] == "GP-1":
-        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_GP1(ArrayDicom,ioption,dx,dy)
+        start = timer()
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_GP1(ArrayDicom,ioptn,dx,dy)
+        dt = timer() - start
+        print( "File processed in %f s" % dt)
 
 
 
@@ -195,7 +202,6 @@ def read_dicom(filenm, ioptn):
     # tolerance levels to change at will
     tol = 1.0  # tolearance level
     act = 2.0  # action level
-    phantom_distance = 10.0  # distance from the bib to the edge of the phantom in mm
 
 
 
@@ -219,11 +225,12 @@ def read_dicom(filenm, ioptn):
     ) as pdf:
         Page = plt.figure(figsize=(4, 5))
         Page.text(0.45, 0.9, "Report", size=18)
-        kk = 0  # counter for data points
-        for profile in profiles:
-            _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
-            # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
-            if answers["type"] == "IsoAlign":
+        if answers["type"] == "IsoAlign":
+            phantom_distance = 3.0  # distance from the bib to the edge of the phantom in mm
+            kk = 0  # counter for data points
+            for profile in profiles:
+                _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
+                # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
                 if (  # pylint: disable = consider-using-in
                     k == 0 or k == 1 or k == 4 or k == 5
                 ):  # there are the bibs in the horizontal
@@ -301,7 +308,7 @@ def read_dicom(filenm, ioptn):
                             color="y",
                         )
                     else:
-                        # print('3')
+                        # print('3')xdet[0]
                         Page.text(
                             0.1,
                             0.8 - kk / 10,
@@ -334,7 +341,12 @@ def read_dicom(filenm, ioptn):
                     ax.set_ylabel("y distance [cm]")
 
                 k = k + 1
-            elif answers["type"] == "GP-1":
+        elif answers["type"] == "GP-1":
+            phantom_distance = 10.0  # distance from the bib to the edge of the phantom in mm
+            kk = 0  # counter for data points
+            for profile in profiles:
+                _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
+                # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
                 if (  # pylint: disable = consider-using-in
                     k == 0 or k == 2 
                 ):  # there are the bibs in the horizontal
@@ -445,115 +457,105 @@ def read_dicom(filenm, ioptn):
                     ax.set_ylabel("y distance [cm]")
 
                 k = k + 1
-            elif answers["type"] == "FC-2":
-                for k in range(0,4):
-                    offset_value_y = round(
-                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
-                    )
+        elif answers["type"] == "FC-2":
+            phantom_distance = 7.0710678 # distance from the bib to the edge of the phantom in mm
 
-                    txt = str(offset_value_y)
-                    # print('offset_value_y=', offset_value_y)
-                    if abs(offset_value_y) <= tol:
-                        Page.text(
-                            0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                            color="g",
+            for kk in range(0,4):
+                _, index_b = u.find_nearest(profiles[2*kk], 0.5)  # find the 50% amplitude point in the x direction
+                _, index_a = u.find_nearest(profiles[2*kk+1], 0.5)  # find the 50% amplitude point in the y direction
+                # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
+
+                offset_value_y = round(abs((ydet[kk] - index_b) * (dy / 10)) - phantom_distance, 2)
+                offset_value_x = round(abs((xdet[kk] - index_a) * (dx / 10)) - phantom_distance, 2)
+
+
+                txt_x = str(offset_value_x)
+                txt_y = str(offset_value_y)
+
+
+                if abs(offset_value_y) <= tol:
+                    Page.text(
+                        0.1,
+                        0.8 - 2*kk / 10,
+                        "Point " + str(kk + 1) + " vertical offset=" + txt_y + " mm",
+                        color="g",
                         )
-                    elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
-                        Page.text(
+                elif abs(offset_value_y) > tol and abs(offset_value_y) <= act:
+                    Page.text(
                             0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            0.8 - 2*kk / 10,
+                            "Point " + str(kk + 1) + " vertical offset=" + txt_y + " mm",
                             color="y",
                         )
-                    else:
-                        Page.text(
+                else:
+                    Page.text(
                             0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
+                            0.8 - 2*kk / 10,
+                            "Point " + str(kk + 1) + " vertical offset=" + txt_y + " mm",
                             color="r",
                         )
-                    kk = kk + 1
 
-                    ax = fig.add_subplot(
-                        4, 2, k + 1
-                    )  # plotting all the figures in a single plot
 
-                    ax.imshow(
-                        np.array(imcirclist[k], dtype=np.uint8) / 255,
-                        extent=list_extent[k],
-                        origin="upper",
+
+
+
+                if abs(offset_value_x) <= tol:
+                    Page.text(
+                        0.1,
+                        0.8 - (2*kk + 1) / 10,
+                        "Point " + str(kk + 1) + " horizontal offset=" + txt_x + " mm",
+                        color="g",
                     )
-                    ax.scatter(
-                        list_extent[k][0] + xdet[k] * dx / 100,
-                        list_extent[k][3] + ydet[k] * dy / 100,
-                        s=30,
-                        marker="P",
+                elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
+                    Page.text(
+                        0.1,
+                        0.8 - (2*kk + 1) / 10,
+                        "Point " + str(kk + 1) + " horizontal offset=" + txt_x + " mm",
                         color="y",
                     )
-                    ax.set_title("Bib=" + str(k + 1))
-                    ax.axhline(
-                        list_extent[k][3] + index * dy / 100, color="r", linestyle="--"
+                else:
+                    Page.text(
+                        0.1,
+                        0.8 - (2*kk + 1) / 10,
+                        "Point " + str(kk + 1) + " horizontal offset=" + txt_x + " mm",
+                        color="r",
                     )
-                    ax.set_xlabel("x distance [cm]")
-                    ax.set_ylabel("y distance [cm]")
+
+
+
+
+
+
                     
-                    offset_value_x = round(
-                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
-                    )
 
-                    txt = str(offset_value_x)
-                    if abs(offset_value_x) <= tol:
-                        # print('1')
-                        Page.text(
-                            0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                            color="g",
-                        )
-                    elif abs(offset_value_x) > tol and abs(offset_value_x) <= act:
-                        # print('2')
-                        Page.text(
-                            0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                            color="y",
-                        )
-                    else:
-                        # print('3')
-                        Page.text(
-                            0.1,
-                            0.8 - kk / 10,
-                            "Point" + str(kk + 1) + " offset=" + txt + " mm",
-                            color="r",
-                        )
-                    kk = kk + 1
+                ax = fig.add_subplot(
+                    4, 2, kk + 1
+                )  # plotting all the figures in a single plot
 
-                    ax = fig.add_subplot(
-                        4, 2, k + 1
-                    )  # plotting all the figures in a single plot
+                ax.imshow(
+                    np.array(imcirclist[kk], dtype=np.uint8) / 255,
+                    extent=list_extent[kk],
+                    origin="upper",
+                )
+                ax.scatter(
+                    list_extent[kk][0] + xdet[kk] * dx / 100,
+                    list_extent[kk][3] + ydet[kk] * dy / 100,
+                    s=30,
+                    marker="P",
+                    color="y",
+                )
+                ax.set_title("Bib=" + str(kk + 1))
+                ax.axhline(
+                    list_extent[kk][3] + index_b * dy / 100, color="r", linestyle="--"
+                )
 
-                    ax.imshow(
-                        np.array(imcirclist[k], dtype=np.uint8) / 255,
-                        extent=list_extent[k],
-                        origin="upper",
-                    )
-                    ax.scatter(
-                        list_extent[k][0] + xdet[k] * dx / 100,
-                        list_extent[k][3] + ydet[k] * dy / 100,
-                        s=30,
-                        marker="P",
-                        color="y",
-                    )
-                    ax.set_title("Bib=" + str(k + 1))
-                    ax.axvline(
-                        list_extent[k][0] + index * dx / 100, color="r", linestyle="--"
-                    )
-                    ax.set_xlabel("x distance [cm]")
-                    ax.set_ylabel("y distance [cm]")
+                ax.axvline(
+                    list_extent[kk][0] + index_a * dx / 100, color="r", linestyle="--"
+                )
 
-                k = k + 1
+                ax.set_xlabel("x distance [cm]")
+                ax.set_ylabel("y distance [cm]")
+
 
         pdf.savefig()
         pdf.savefig(fig)
@@ -562,7 +564,7 @@ def read_dicom(filenm, ioptn):
         # for the field size calculation
         im = Image.fromarray(255 * ArrayDicom)
 
-        if ioptn.startswith(("y", "yeah", "yes")):
+        if ioptn == 1:
             PROFILE = {
                 "horizontal": 270,
                 "vertical": 430,
@@ -571,15 +573,13 @@ def read_dicom(filenm, ioptn):
             PROFILE = {
                 "horizontal": 470,
                 "vertical": 510,
-            }  # location to extract the horizontal and vertical profiles if this is a true beam
+            }  # location to extract the horizontal and vertical profiles if this is a TrueBeam Edge of Varian XI
 
         profilehorz = (
             np.array(im, dtype=np.uint8)[PROFILE["horizontal"], :] / 255
         )  # we need to change these limits on a less specific criteria
         profilevert = np.array(im, dtype=np.uint8)[:, PROFILE["vertical"]] / 255
 
-        # top_edge, index_top = find_nearest(profilevert[0:height//2], 0.5) # finding the edge of the field on the top
-        # bot_edge, index_bot = find_nearest(profilevert[height//2:height], 0.5) # finding the edge of the field on the bottom
         _, index_top = u.find_nearest(
             profilevert[0 : height // 2], 0.5
         )  # finding the edge of the field on the top
@@ -587,8 +587,6 @@ def read_dicom(filenm, ioptn):
             profilevert[height // 2 : height], 0.5
         )  # finding the edge of the field on the bottom
 
-        # l_edge, index_l = find_nearest(profilehorz[0:width//2], 0.5) #finding the edge of the field on the bottom
-        # r_edge, index_r = find_nearest(profilehorz[width//2:width], 0.5) #finding the edge of the field on the right
         _, index_l = u.find_nearest(
             profilehorz[0 : width // 2], 0.5
         )  # finding the edge of the field on the bottom
@@ -643,17 +641,17 @@ def read_dicom(filenm, ioptn):
 
 
 if __name__ == "__main__":
-    while True:  # example of infinite loops using try and except to catch only numbers
-        line = input("Are these files from a clinac [yes(y)/no(n)]> ")
-        try:
-            ##        if line == 'done':
-            ##            break
-            ioption = str(line.lower())
-            if ioption.startswith(("y", "yeah", "yes", "n", "no", "nope")):
-                break
-
-        except:  # pylint: disable = bare-except
-            print("Please enter a valid option:")
+    # while True:  # example of infinite loops using try and except to catch only numbers
+    #     line = input("Are these files from a clinac [yes(y)/no(n)]> ")
+    #     try:
+    #         ##        if line == 'done':
+    #         ##            break
+    #         ioption = str(line.lower())
+    #         if ioption.startswith(("y", "yeah", "yes", "n", "no", "nope")):
+    #             break
+    #
+    #     except:  # pylint: disable = bare-except
+    #         print("Please enter a valid option:")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str, help="Input the Light/Rad file")
@@ -661,4 +659,4 @@ if __name__ == "__main__":
 
     filename = args.file
 
-    read_dicom(filename, ioption)
+    read_dicom(filename)

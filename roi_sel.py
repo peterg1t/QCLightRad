@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from skimage.feature import blob_log
-
+import matplotlib.pyplot as plt
 
 
 
@@ -17,6 +17,9 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
         blobs_log = blob_log(
             grey_img, min_sigma=minSigma, max_sigma=maxSigma, num_sigma=numSigma, threshold=thres
         )
+
+
+
 
         centerXRegion = []
         centerYRegion = []
@@ -53,30 +56,31 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
 def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
      # creating the figure extent list for the bib images
     list_extent = []
-    print('something here')
-    if ioption.startswith(('y', 'yeah', 'yes')):
-        ROI1 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 270, "edge_right": 350}
-        ROI2 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 680, "edge_right": 760}
-        ROI3 = {"edge_top": 150,"edge_bottom": 210,"edge_left": 760,"edge_right": 830}
-        ROI4 = {"edge_top": 560,"edge_bottom": 620,"edge_left": 760,"edge_right": 830}
-    else:
-        ROI1 = {
-                "edge_top": 66,
-                "edge_bottom": 166,
-                "edge_left": 195,
-                "edge_right": 295,
+    if ioption==1:  #these are the ROI for a clinac
+        print('Clinac machine detected...')
+        ROI1 = {"edge_top": 66, "edge_bottom": 166, "edge_left": 195, "edge_right": 295}
+        ROI2 = {"edge_top": 66, "edge_bottom": 166, "edge_left": 728, "edge_right": 828}
+        ROI3 = {"edge_top": 582,"edge_bottom": 682,"edge_left": 728,"edge_right": 828}
+        ROI4 = {"edge_top": 582,"edge_bottom": 682,"edge_left": 195,"edge_right": 295}
+    elif ioption==2:
+        print('TrueBeam Edge machine detected...')
+        ROI1 = {   #these are the ROI for a TrueBeam Edge
+                "edge_top": 66,         #y1
+                "edge_bottom": 166,     #y2
+                "edge_left": 195,       #x1
+                "edge_right": 295,      #x2
             }
         ROI2 = {
                "edge_top": 66,
                "edge_bottom": 166,
-               "edge_left": 698,
-               "edge_right": 798,
+               "edge_left": 728,
+               "edge_right": 828,
            }
         ROI3 = {
                "edge_top": 582,
                "edge_bottom": 682,
-               "edge_left": 698,
-               "edge_right": 798,
+               "edge_left": 728,
+               "edge_right": 828,
            }
         ROI4 = {
                "edge_top": 582,
@@ -84,6 +88,32 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
                "edge_left": 195,
                "edge_right": 295,
            }
+    elif ioption == 3:
+        print('Varian XI machine detected...')
+        ROI1 = {  # these are the ROI for a TrueBeam XI
+            "edge_top": 289,  # y1
+            "edge_bottom": 394,  # y2
+            "edge_left": 299,  # x1
+            "edge_right": 404,  # x2
+        }
+        ROI2 = {
+            "edge_top": 289,
+            "edge_bottom": 394,
+            "edge_left": 880,
+            "edge_right": 985,
+        }
+        ROI3 = {
+            "edge_top": 880,
+            "edge_bottom": 985,
+            "edge_left": 880,
+            "edge_right": 985,
+        }
+        ROI4 = {
+            "edge_top": 880,
+            "edge_bottom": 985,
+            "edge_left": 299,
+            "edge_right": 404,
+        }
 
    # images for object detection
     imcirclist = []
@@ -95,6 +125,11 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
        ]
     )
     imcirc1 = imcirc1.resize((imcirc1.width * 10, imcirc1.height * 10), Image.LANCZOS)
+
+
+
+
+
 
     list_extent.append(
        (
@@ -144,7 +179,7 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
        255
        * ArrayDicom[
            ROI4["edge_top"] : ROI4["edge_bottom"],
-           ROI4["edget_left"] : ROI4["edge_right"],
+           ROI4["edge_left"] : ROI4["edge_right"],
        ]
    )
     imcirc4 = imcirc4.resize((imcirc4.width * 10, imcirc4.height * 10), Image.LANCZOS)
@@ -159,10 +194,13 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
    )
 
 
+
     imcirclist.append(imcirc1)
     imcirclist.append(imcirc2)
     imcirclist.append(imcirc3)
     imcirclist.append(imcirc4)
+
+
 
     minSigma=15
     maxSigma=40
@@ -171,15 +209,23 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
     xdet, ydet = point_detect(imcirclist, minSigma, maxSigma, numSigma, thres)
 
     profiles = []
-    profile1 = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]] / 255
-    profile2 = np.array(imcirc2, dtype=np.uint8)[:, xdet[1]] / 255
-    profile3 = np.array(imcirc3, dtype=np.uint8)[ydet[2], :] / 255
-    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3], :] / 255
+    profile1a = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]] / 255
+    profile1b = np.array(imcirc1, dtype=np.uint8)[ydet[0],:] / 255
+    profile2a = np.array(imcirc2, dtype=np.uint8)[:, xdet[1]] / 255
+    profile2b = np.array(imcirc2, dtype=np.uint8)[ydet[1],:] / 255
+    profile3a = np.array(imcirc3, dtype=np.uint8)[:, xdet[2]] / 255
+    profile3b = np.array(imcirc3, dtype=np.uint8)[ydet[2],:] / 255
+    profile4a = np.array(imcirc4, dtype=np.uint8)[:, xdet[3]] / 255
+    profile4b = np.array(imcirc4, dtype=np.uint8)[ydet[3],:] / 255
 
-    profiles.append(profile1)
-    profiles.append(profile2)
-    profiles.append(profile3)
-    profiles.append(profile4)
+    profiles.append(profile1a)
+    profiles.append(profile1b)
+    profiles.append(profile2a)
+    profiles.append(profile2b)
+    profiles.append(profile3a)
+    profiles.append(profile3b)
+    profiles.append(profile4a)
+    profiles.append(profile4b)
 
 
     return profiles, imcirclist, xdet, ydet, list_extent
@@ -201,7 +247,8 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
 def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
      # creating the figure extent list for the bib images
     list_extent = []
-    if ioption.startswith(('y', 'yeah', 'yes')):
+    if ioption == 1:
+        print('Clinac machine detected...')
         ROI1 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 270, "edge_right": 350}
         ROI2 = {"edge_top": 70, "edge_bottom": 130, "edge_left": 680, "edge_right": 760}
         ROI3 = {
@@ -240,7 +287,8 @@ def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
             "edge_left": 200,
             "edge_right": 270,
         }
-    else:
+    elif ioption == 2:
+        print('TrueBeam Edge machine detected...')
         ROI1 = {
             "edge_top": 280,
             "edge_bottom": 360,
@@ -490,7 +538,8 @@ def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
 def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
      # creating the figure extent list for the bib images
     list_extent = []
-    if ioption.startswith(('y', 'yeah', 'yes')):
+    if ioption == 1:
+        print('Clinac machine detected...')
         ROI1 = {"edge_top": 140, "edge_bottom": 310, "edge_left": 435, "edge_right": 605}
         ROI2 = {"edge_top": 300, "edge_bottom": 470, "edge_left": 598, "edge_right": 768}
         ROI3 = {
@@ -505,7 +554,8 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
             "edge_left": 236,
             "edge_right": 406,
         }
-    else:
+    elif ioption == 2:
+        print('TrueBeam Edge machine detected...')
         ROI1 = {"edge_top": 288, "edge_bottom": 488, "edge_left": 489, "edge_right": 709}
         ROI2 = {"edge_top": 500, "edge_bottom": 700, "edge_left": 684, "edge_right": 889}
         ROI3 = {
