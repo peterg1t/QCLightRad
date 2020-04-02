@@ -540,35 +540,35 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
     list_extent = []
     if ioption == 1:
         print('Clinac machine detected...')
-        ROI1 = {"edge_top": 140, "edge_bottom": 310, "edge_left": 435, "edge_right": 605}
-        ROI2 = {"edge_top": 300, "edge_bottom": 470, "edge_left": 598, "edge_right": 768}
+        ROI1 = {"edge_top": 165, "edge_bottom": 265, "edge_left": 462, "edge_right": 562}
+        ROI2 = {"edge_top": 339, "edge_bottom": 439, "edge_left": 635, "edge_right": 735}
         ROI3 = {
-            "edge_top": 485,
-            "edge_bottom": 655,
-            "edge_left": 435,
-            "edge_right": 605,
+            "edge_top": 506,
+            "edge_bottom": 606,
+            "edge_left": 462,
+            "edge_right": 562,
         }
         ROI4 = {
-            "edge_top": 300,
-            "edge_bottom": 470,
-            "edge_left": 236,
-            "edge_right": 406,
+            "edge_top": 339,
+            "edge_bottom": 439,
+            "edge_left": 292,
+            "edge_right": 392,
         }
     elif ioption == 2:
         print('TrueBeam Edge machine detected...')
-        ROI1 = {"edge_top": 288, "edge_bottom": 488, "edge_left": 489, "edge_right": 709}
-        ROI2 = {"edge_top": 500, "edge_bottom": 700, "edge_left": 684, "edge_right": 889}
+        ROI1 = {"edge_top": 344, "edge_bottom": 444, "edge_left": 543, "edge_right": 643}
+        ROI2 = {"edge_top": 535, "edge_bottom": 635, "edge_left": 740, "edge_right": 840}
         ROI3 = {
-            "edge_top": 713,
-            "edge_bottom": 913,
-            "edge_left": 489,
-            "edge_right": 709,
+            "edge_top": 743,
+            "edge_bottom": 843,
+            "edge_left": 543,
+            "edge_right": 643,
         }
         ROI4 = {
-            "edge_top": 500,
-            "edge_bottom": 700,
-            "edge_left": 280,
-            "edge_right": 485,
+            "edge_top": 550,
+            "edge_bottom": 650,
+            "edge_left": 345,
+            "edge_right": 445,
         }
 
     # images for object detection
