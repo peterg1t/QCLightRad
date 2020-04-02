@@ -465,8 +465,8 @@ def read_dicom(filenm):
                 _, index_a = u.find_nearest(profiles[2*kk+1], 0.5)  # find the 50% amplitude point in the y direction
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
 
-                offset_value_x = round(abs((ydet[kk] - index_b) * (dy / 10)) - phantom_distance, 2)
-                offset_value_y = round(abs((xdet[kk] - index_a) * (dx / 10)) - phantom_distance, 2)
+                offset_value_y = round(abs((ydet[kk] - index_b) * (dy / 10)) - phantom_distance, 2)
+                offset_value_x = round(abs((xdet[kk] - index_a) * (dx / 10)) - phantom_distance, 2)
 
 
                 txt_x = str(offset_value_x)
