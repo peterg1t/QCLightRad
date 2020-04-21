@@ -62,42 +62,6 @@ import inquirer
 from timeit import default_timer as timer
 
 
-def point_detect(imcirclist):
-    k = 0
-    detCenterXRegion = []
-    detCenterYRegion = []
-
-    print("Finding bibs in phantom...")
-    for img in tqdm(imcirclist):
-        grey_img = np.array(img, dtype=np.uint8)  # converting the image to grayscale
-        blobs_log = blob_log(
-            grey_img, min_sigma=15, max_sigma=40, num_sigma=10, threshold=0.05
-        )
-
-        centerXRegion = []
-        centerYRegion = []
-        centerRRegion = []
-        grey_ampRegion = []
-        for blob in blobs_log:
-            y, x, r = blob
-            # center = (int(x), int(y))
-            centerXRegion.append(x)
-            centerYRegion.append(y)
-            centerRRegion.append(r)
-            grey_ampRegion.append(grey_img[int(y), int(x)])
-            # radius = int(r)
-            # print('center=', center, 'radius=', radius, 'value=', img[center], grey_img[center])
-
-        xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
-        yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
-        # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
-
-        detCenterXRegion.append(xindx)
-        detCenterYRegion.append(yindx)
-
-        k = k + 1
-
-    return detCenterXRegion, detCenterYRegion
 
 
 def read_dicom(filenm):

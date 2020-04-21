@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance
 from tqdm import tqdm
 from skimage.feature import blob_log
 import matplotlib.pyplot as plt
@@ -13,13 +13,21 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
 
     print("Finding bibs in phantom...")
     for img in tqdm(imcirclist):
-        grey_img = np.array(img, dtype=np.uint8)  # converting the image to grayscale
+        
+        #Image pre-processing to detect low amplitude bibs 
+        img=img.convert(mode='L')
+        #image brightness enhancer
+        enhancer = ImageEnhance.Brightness(img)
+        img = enhancer.enhance(3.5)
+        img.save('img_enh_b','PNG')
+        #image brightness enhancer
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(1.5)
+
+        grey_img = np.array(img, dtype=np.uint8)  # converting the image to a numpy matrix
         blobs_log = blob_log(
             grey_img, min_sigma=minSigma, max_sigma=maxSigma, num_sigma=numSigma, threshold=thres
         )
-
-
-
 
         centerXRegion = []
         centerYRegion = []
@@ -206,6 +214,9 @@ def roi_sel_FC2(ArrayDicom,ioption,dx,dy):
     maxSigma=40
     numSigma=10
     thres=0.05
+
+
+    
     xdet, ydet = point_detect(imcirclist, minSigma, maxSigma, numSigma, thres)
 
     profiles = []
@@ -557,7 +568,7 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
     elif ioption == 2:
         print('TrueBeam Edge machine detected...')
         ROI1 = {"edge_top": 344, "edge_bottom": 444, "edge_left": 543, "edge_right": 643}
-        ROI2 = {"edge_top": 535, "edge_bottom": 635, "edge_left": 740, "edge_right": 840}
+        ROI2 = {"edge_top": 545, "edge_bottom": 645, "edge_left": 740, "edge_right": 840}
         ROI3 = {
             "edge_top": 743,
             "edge_bottom": 843,
