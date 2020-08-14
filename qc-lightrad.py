@@ -32,7 +32,7 @@
 #
 #   Description: This script performs automated EPID QC of the QC-3 phantom developed in Manitoba.
 #   There are other tools out there that do this but generally the ROI are fixed whereas this script
-#   aims to dynamically identify them using machine vision and the bibs in the phantom.
+#   aims to dynamically identify them using machine vision and the BBs in the phantom.
 #
 #   Example usage: python qc-lightrad "/file/"
 #
@@ -60,8 +60,15 @@ import roi_sel as roi
 import utils as u
 import inquirer
 from timeit import default_timer as timer
+from outlier import find_outlier_pixels
 
 
+def argmax2d(X):
+    n, m = X.shape
+    x_ = np.ravel(X)
+    k = np.argmax(x_)
+    i, j = k // m, k % m
+    return i, j
 
 
 def read_dicom(filenm):
@@ -89,15 +96,8 @@ def read_dicom(filenm):
         0,
     )
 
-    # creating the figure extent list for the bib images
+    # creating the figure extent list for the BB images
     list_extent = []
-
-    # plt.figure()
-    # plt.imshow(ArrayDicom, extent=extent, origin='upper')
-    # plt.imshow(ArrayDicom)
-    # plt.xlabel('x distance [cm]')
-    # plt.ylabel('y distance [cm]')
-    # plt.show()
 
     print('np.shape_dim0',np.shape(ArrayDicom)[0])
     if np.shape(ArrayDicom)[0] == 768: #Clinac
@@ -106,6 +106,10 @@ def read_dicom(filenm):
         ioptn=2
     elif np.shape(ArrayDicom)[0] == 1280: ##Varian XI (Edmonton)
         ioptn=3
+
+    intercept = dataset[0x0028, 0x1052].value
+    slope = dataset[0x0028, 0x1053].value
+    ArrayDicom = ArrayDicom * slope + intercept
 
 
 
@@ -118,24 +122,34 @@ def read_dicom(filenm):
     # we take a diagonal profile to avoid phantom artifacts
     # im_profile = ArrayDicom_mod.diagonal()
 
-    # test to make sure image is displayed correctly bibs are high amplitude against dark background
+    # test to make sure image is displayed correctly BBs are high amplitude against dark background
     ctr_pixel = ArrayDicom_mod[height // 2, width // 2]
     corner_pixel = ArrayDicom_mod[0, 0]
+
+
+    # processing of hot BBs
+    hot_pixels, ArrayDicom = find_outlier_pixels(ArrayDicom)
+
+    # fig = plt.figure()
+    # plt.imshow(fixed_image)
+    # # plt.plot(profile_horz_inv)
+    # plt.show(block=True)
+
+    # print('max value', np.max(ArrayDicom))
+    # #where do maximum values occur
+    # print(argmax2d(ArrayDicom))
+    # print(ArrayDicom[argmax2d(ArrayDicom)[0],argmax2d(ArrayDicom)[1]])
+
+
+    ArrayDicom = u.norm01(ArrayDicom)
 
     if ctr_pixel > corner_pixel:
         ArrayDicom = u.range_invert(ArrayDicom)
 
-    ArrayDicom = u.norm01(ArrayDicom)
 
 
 
-
-
-
-    #Here we need to select the correct ROIs for the image processing since in the FC-2 phantom the bibs are in the corners we will select more than 1 ROI per-bib maybe??
-
-
-
+    #Here we need to select the correct ROIs for the image processing since in the FC-2 phantom the BBs are in the corners we will select more than 1 ROI per-BB maybe??
     questions = [
         inquirer.List(
             "type",
@@ -158,7 +172,7 @@ def read_dicom(filenm):
         start = timer()
         profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_GP1(ArrayDicom,ioptn,dx,dy)
         dt = timer() - start
-        print( "File processed in %f s" % dt)
+        print("File processed in %f s" % dt)
 
 
 
@@ -170,7 +184,7 @@ def read_dicom(filenm):
 
 
     k = 0
-    fig = plt.figure(figsize=(8, 12))  # this figure will hold the bibs
+    fig = plt.figure(figsize=(8, 12))  # this figure will hold the BBs
     plt.subplots_adjust(hspace=0.35)
 
     # creating the page to write the results
@@ -190,14 +204,15 @@ def read_dicom(filenm):
         Page = plt.figure(figsize=(4, 5))
         Page.text(0.45, 0.9, "Report", size=18)
         if answers["type"] == "IsoAlign":
-            phantom_distance = 3.0  # distance from the bib to the edge of the phantom in mm
+            phantom_distance = 3.0  # distance from the BB to the edge of the phantom in mm
             kk = 0  # counter for data points
             for profile in profiles:
-                _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
+                profile_inv = u.range_invert(profile)
+                _, index = u.find_nearest(profile_inv, 0.5)  # find the 50% amplitude point
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
                 if (  # pylint: disable = consider-using-in
                     k == 0 or k == 1 or k == 4 or k == 5
-                ):  # there are the bibs in the horizontal
+                ):  # there are the BBs in the horizontal
                     offset_value_y = round(
                         abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
                     )
@@ -306,14 +321,15 @@ def read_dicom(filenm):
 
                 k = k + 1
         elif answers["type"] == "GP-1":
-            phantom_distance = 10.0  # distance from the bib to the edge of the phantom in mm
+            phantom_distance = 10.0  # distance from the BB to the edge of the phantom in mm
             kk = 0  # counter for data points
             for profile in profiles:
-                _, index = u.find_nearest(profile, 0.5)  # find the 50% amplitude point
+                profile_inv = u.range_invert(profile)
+                _, index = u.find_nearest(profile_inv, 0.5)  # find the 50% amplitude point
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
                 if (  # pylint: disable = consider-using-in
                     k == 0 or k == 2 
-                ):  # there are the bibs in the horizontal
+                ):  # there are the BBs in the horizontal
                     offset_value_y = round(
                         abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
                     )
@@ -422,11 +438,13 @@ def read_dicom(filenm):
 
                 k = k + 1
         elif answers["type"] == "FC-2":
-            phantom_distance = 7.0710678 # distance from the bib to the edge of the phantom in mm
+            phantom_distance = 7.0710678 # distance from the BB to the edge of the phantom in mm
 
             for kk in range(0,4):
-                _, index_b = u.find_nearest(profiles[2*kk], 0.5)  # find the 50% amplitude point in the x direction
-                _, index_a = u.find_nearest(profiles[2*kk+1], 0.5)  # find the 50% amplitude point in the y direction
+                profile_inv1 = u.range_invert(profiles[2*kk])
+                profile_inv2 = u.range_invert(profiles[2*kk+1])
+                _, index_b = u.find_nearest(profile_inv1, 0.5)  # find the 50% amplitude point in the x direction
+                _, index_a = u.find_nearest(profile_inv2, 0.5)  # find the 50% amplitude point in the y direction
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
 
                 offset_value_y = round(abs((ydet[kk] - index_b) * (dy / 10)) - phantom_distance, 2)
@@ -543,10 +561,17 @@ def read_dicom(filenm):
             np.array(im, dtype=np.uint8)[PROFILE["horizontal"], :] / 255
         )  # we need to change these limits on a less specific criteria
         profilevert = np.array(im, dtype=np.uint8)[:, PROFILE["vertical"]] / 255
+        profile_horz_inv = u.range_invert(profilehorz)
+        profile_vrt_inv = u.range_invert(profilevert)
 
         _, index_top = u.find_nearest(
             profilevert[0 : height // 2], 0.5
         )  # finding the edge of the field on the top
+        # fig = plt.figure()  WORKING HERE
+        # plt.imshow(ArrayDicom)
+        # plt.plot(profile_horz_inv)
+        # plt.show(block=True)
+        # exit(0)
         _, index_bot = u.find_nearest(
             profilevert[height // 2 : height], 0.5
         )  # finding the edge of the field on the bottom
@@ -605,18 +630,6 @@ def read_dicom(filenm):
 
 
 if __name__ == "__main__":
-    # while True:  # example of infinite loops using try and except to catch only numbers
-    #     line = input("Are these files from a clinac [yes(y)/no(n)]> ")
-    #     try:
-    #         ##        if line == 'done':
-    #         ##            break
-    #         ioption = str(line.lower())
-    #         if ioption.startswith(("y", "yeah", "yes", "n", "no", "nope")):
-    #             break
-    #
-    #     except:  # pylint: disable = bare-except
-    #         print("Please enter a valid option:")
-
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str, help="Input the Light/Rad file")
     args = parser.parse_args()

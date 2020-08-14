@@ -14,15 +14,15 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
     print("Finding bibs in phantom...")
     for img in tqdm(imcirclist):
         
-        #Image pre-processing to detect low amplitude bibs 
-        img=img.convert(mode='L')
-        #image brightness enhancer
-        enhancer = ImageEnhance.Brightness(img)
-        img = enhancer.enhance(3.5)
-        img.save('img_enh_b','PNG')
-        #image brightness enhancer
-        enhancer = ImageEnhance.Contrast(img)
-        img = enhancer.enhance(1.5)
+        # #Image pre-processing to detect low amplitude bibs
+        # img=img.convert(mode='L')
+        # #image brightness enhancer
+        # enhancer = ImageEnhance.Brightness(img)
+        # img = enhancer.enhance(3.5)
+        # img.save('img_enh_b','PNG')
+        # #image brightness enhancer
+        # enhancer = ImageEnhance.Contrast(img)
+        # img = enhancer.enhance(1.5)
 
         grey_img = np.array(img, dtype=np.uint8)  # converting the image to a numpy matrix
         blobs_log = blob_log(
@@ -35,17 +35,23 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
         grey_ampRegion = []
         for blob in blobs_log:
             y, x, r = blob
-            # center = (int(x), int(y))
+            center = (int(x), int(y))
             centerXRegion.append(x)
             centerYRegion.append(y)
             centerRRegion.append(r)
             grey_ampRegion.append(grey_img[int(y), int(x)])
-            # radius = int(r)
-            # print('center=', center, 'radius=', radius, 'value=', img[center], grey_img[center])
+            radius = int(r)
+            print('center=', center, 'radius=', radius, 'pixel_val',grey_img[int(y), int(x)])
 
         xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
         yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
         # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
+
+        # fig,ax = plt.subplots()
+        # ax.imshow(img)
+        # ax.scatter(xindx,yindx)
+        # plt.show(block=True)
+
 
         detCenterXRegion.append(xindx)
         detCenterYRegion.append(yindx)
