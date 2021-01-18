@@ -551,11 +551,17 @@ def read_dicom(filenm):
                 "horizontal": 270,
                 "vertical": 430,
             }  # location to extract the horizontal and vertical profiles if this is a linac
-        else:
+        elif ioptn == 2:
             PROFILE = {
                 "horizontal": 470,
                 "vertical": 510,
             }  # location to extract the horizontal and vertical profiles if this is a TrueBeam Edge of Varian XI
+        elif ioptn == 3:
+            PROFILE = {
+                "horizontal": 470,
+                "vertical": 470,
+            }  # location to extract the horizontal and vertical profiles if this is a TrueBeam Edge of Varian XI
+        
 
         profilehorz = (
             np.array(im, dtype=np.uint8)[PROFILE["horizontal"], :] / 255
