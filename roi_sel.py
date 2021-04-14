@@ -43,6 +43,7 @@ def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
             radius = int(r)
             print('center=', center, 'radius=', radius, 'pixel_val',grey_img[int(y), int(x)])
 
+        
         xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
         yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
         # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
@@ -354,6 +355,56 @@ def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
             "edge_left": 280,
             "edge_right": 360,
         }
+    elif ioption == 3:
+        print('TrueBeam Edge machine detected...')
+        ROI1 = {
+            "edge_top": 266,
+            "edge_bottom": 366,
+            "edge_left": 350,
+            "edge_right": 450,
+        }
+        ROI2 = {
+            "edge_top": 266,
+            "edge_bottom": 366,
+            "edge_left": 828,
+            "edge_right": 928,
+        }
+        ROI3 = {
+            "edge_top": 351,
+            "edge_bottom": 451,
+            "edge_left": 918,
+            "edge_right": 1018,
+        }
+        ROI4 = {
+            "edge_top": 827,
+            "edge_bottom": 927,
+            "edge_left": 919,
+            "edge_right": 1019,
+        }
+        ROI5 = {
+            "edge_top": 917,
+            "edge_bottom": 1017,
+            "edge_left": 829,
+            "edge_right": 929,
+        }
+        ROI6 = {
+            "edge_top": 912,
+            "edge_bottom": 1012,
+            "edge_left": 353,
+            "edge_right": 453,
+        }
+        ROI7 = {
+            "edge_top": 832,
+            "edge_bottom": 932,
+            "edge_left": 265,
+            "edge_right": 365,
+        }
+        ROI8 = {
+            "edge_top": 354,
+            "edge_bottom": 454,
+            "edge_left": 261,
+            "edge_right": 361,
+        }
 
     # images for object detection
     imcirclist = []
@@ -508,6 +559,14 @@ def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
     imcirclist.append(imcirc6)
     imcirclist.append(imcirc7)
     imcirclist.append(imcirc8)
+
+
+    # tot_image=Image.fromarray(255* ArrayDicom)
+    # tot_image.show()
+    # for img in imcirclist:
+    #     print(img)
+    #     img.show()
+    # exit(0)
 
     minSigma=15
     maxSigma=40

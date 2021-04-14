@@ -163,6 +163,7 @@ def read_dicom(filenm):
     ]
     answers = inquirer.prompt(questions)
     print(answers["type"])
+    print('ioptn',ioptn)
 
     if answers["type"] == "IsoAlign":
         profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_IsoAlign(ArrayDicom,ioptn,dx,dy)
