@@ -612,7 +612,8 @@ def roi_sel_IsoAlign(ArrayDicom,ioption,dx,dy):
 
 
 def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
-     # creating the figure extent list for the bib images
+    # creating the figure extent list for the bib images
+    print(ioption)
     list_extent = []
     if ioption == 1:
         print('Clinac machine detected...')
@@ -646,6 +647,23 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
             "edge_left": 345,
             "edge_right": 445,
         }
+    elif ioption == 3:
+        print('TrueBeam Edge machine detected...')
+        ROI1 = {"edge_top": 390, "edge_bottom": 510, "edge_left": 578, "edge_right": 698}
+        ROI2 = {"edge_top": 576, "edge_bottom": 696, "edge_left": 770, "edge_right": 890}
+        ROI3 = {
+            "edge_top": 771,
+            "edge_bottom": 891,
+            "edge_left": 577,
+            "edge_right": 697,
+        }
+        ROI4 = {
+            "edge_top": 574,
+            "edge_bottom": 694,
+            "edge_left": 392,
+            "edge_right": 512,
+        }
+    print(ROI1,ROI2,ROI3,ROI4)
 
     # images for object detection
     imcirclist = []
