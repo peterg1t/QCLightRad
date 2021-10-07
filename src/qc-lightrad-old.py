@@ -53,11 +53,10 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.ticker import MultipleLocator, AutoMinorLocator
 from PIL import Image
 from skimage.feature import blob_log
 import pydicom
-import roi_sel as roi
+import roi_sel_old as roi
 import utils as u
 import inquirer
 from timeit import default_timer as timer
@@ -91,10 +90,10 @@ def read_dicom(filenm):
 
     # creating the figure extent based on the image dimensions, we divide by 10 to get the units in cm
     extent = (
-        -(ArrayDicom.shape[1] / 2) * dx / 10,
-        (ArrayDicom.shape[1] / 2) * dx / 10,
-        -(ArrayDicom.shape[0] / 2) * dy / 10,
-        (ArrayDicom.shape[0] / 2) * dy / 10,
+        0,
+        0 + (ArrayDicom.shape[1] * dx / 10),
+        0 + (ArrayDicom.shape[0] * dy / 10),
+        0,
     )
 
     # creating the figure extent list for the BB images
@@ -172,7 +171,7 @@ def read_dicom(filenm):
         profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_FC2(ArrayDicom,ioptn,dx,dy)
     elif answers["type"] == "GP-1":
         start = timer()
-        profiles, imcirclist, point, list_extent = roi.roi_sel_GP1(ArrayDicom,ioptn,dx,dy)
+        profiles, imcirclist, xdet, ydet, list_extent = roi.roi_sel_GP1(ArrayDicom,ioptn,dx,dy)
         dt = timer() - start
         print("File processed in %f s" % dt)
 
@@ -216,7 +215,7 @@ def read_dicom(filenm):
                     k == 0 or k == 1 or k == 4 or k == 5
                 ):  # there are the BBs in the horizontal
                     offset_value_y = round(
-                        abs((point[k][1] - index) * (dy / 10)) - phantom_distance, 2
+                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
                     )
 
                     txt = str(offset_value_y)
@@ -254,8 +253,8 @@ def read_dicom(filenm):
                         origin="upper",
                     )
                     ax.scatter(
-                        list_extent[k][0] + point[k][0] * dx / 100,
-                        list_extent[k][3] + point[k][0] * dy / 100,
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
                         s=30,
                         marker="P",
                         color="y",
@@ -268,7 +267,7 @@ def read_dicom(filenm):
                     ax.set_ylabel("y distance [cm]")
                 else:
                     offset_value_x = round(
-                        abs((point[k][0] - index) * (dx / 10)) - phantom_distance, 2
+                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
                     )
 
                     txt = str(offset_value_x)
@@ -308,8 +307,8 @@ def read_dicom(filenm):
                         origin="upper",
                     )
                     ax.scatter(
-                        list_extent[k][0] + point[k][0] * dx / 100,
-                        list_extent[k][3] + point[k][1] * dy / 100,
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
                         s=30,
                         marker="P",
                         color="y",
@@ -333,7 +332,7 @@ def read_dicom(filenm):
                     k == 0 or k == 2 
                 ):  # there are the BBs in the horizontal
                     offset_value_y = round(
-                        abs((point[k][1] - index) * (dy / 10)) - phantom_distance, 2
+                        abs((ydet[k] - index) * (dy / 10)) - phantom_distance, 2
                     )
 
                     txt = str(offset_value_y)
@@ -371,8 +370,8 @@ def read_dicom(filenm):
                         origin="upper",
                     )
                     ax.scatter(
-                        list_extent[k][0] + point[k][0] * dx / 100,
-                        list_extent[k][3] + point[k][1] * dy / 100,
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
                         s=30,
                         marker="P",
                         color="y",
@@ -385,7 +384,7 @@ def read_dicom(filenm):
                     ax.set_ylabel("y distance [cm]")
                 else:
                     offset_value_x = round(
-                        abs((point[k][0] - index) * (dx / 10)) - phantom_distance, 2
+                        abs((xdet[k] - index) * (dx / 10)) - phantom_distance, 2
                     )
 
                     txt = str(offset_value_x)
@@ -425,8 +424,8 @@ def read_dicom(filenm):
                         origin="upper",
                     )
                     ax.scatter(
-                        list_extent[k][0] + point[k][0] * dx / 100,
-                        list_extent[k][3] + point[k][1] * dy / 100,
+                        list_extent[k][0] + xdet[k] * dx / 100,
+                        list_extent[k][3] + ydet[k] * dy / 100,
                         s=30,
                         marker="P",
                         color="y",
@@ -449,8 +448,8 @@ def read_dicom(filenm):
                 _, index_a = u.find_nearest(profile_inv2, 0.5)  # find the 50% amplitude point in the y direction
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
 
-                offset_value_y = round(abs((point[kk][1] - index_b) * (dy / 10)) - phantom_distance, 2)
-                offset_value_x = round(abs((point[kk][0] - index_a) * (dx / 10)) - phantom_distance, 2)
+                offset_value_y = round(abs((ydet[kk] - index_b) * (dy / 10)) - phantom_distance, 2)
+                offset_value_x = round(abs((xdet[kk] - index_a) * (dx / 10)) - phantom_distance, 2)
 
 
                 txt_x = str(offset_value_x)
@@ -522,8 +521,8 @@ def read_dicom(filenm):
                     origin="upper",
                 )
                 ax.scatter(
-                    list_extent[kk][0] + point[kk][0] * dx / 100,
-                    list_extent[kk][3] + point[kk][1] * dy / 100,
+                    list_extent[kk][0] + xdet[kk] * dx / 100,
+                    list_extent[kk][3] + ydet[kk] * dy / 100,
                     s=30,
                     marker="P",
                     color="y",
@@ -565,99 +564,73 @@ def read_dicom(filenm):
             }  # location to extract the horizontal and vertical profiles if this is a TrueBeam Edge of Varian XI
         
 
-        #new profile definitions
-        profilehorz = u.range_invert(ArrayDicom[height//2,:])
-        profilevert = u.range_invert(ArrayDicom[:, width//2])
-        print(np.shape(profilehorz),np.shape(profilevert))
-
-        profilehorz_im = Image.fromarray(255*profilehorz)
-        profilehorz_interp = profilehorz_im.resize((1,  profilehorz_im.height*10), Image.LANCZOS)
-
-        profilevert_im = Image.fromarray(255*profilevert)
-        profilevert_interp = profilevert_im.resize((1,  profilevert_im.height*10), Image.LANCZOS)
-
-        profilehorz = np.array(profilehorz_interp)/255
-        profilevert = np.array(profilevert_interp)/255
+        profilehorz = (
+            np.array(im, dtype=np.uint8)[PROFILE["horizontal"], :] / 255
+        )  # we need to change these limits on a less specific criteria
+        profilevert = np.array(im, dtype=np.uint8)[:, PROFILE["vertical"]] / 255
+        profile_horz_inv = u.range_invert(profilehorz)
+        profile_vrt_inv = u.range_invert(profilevert)
 
         _, index_top = u.find_nearest(
-        profilevert[0 : height*10 // 2], 0.5
+            profilevert[0 : height // 2], 0.5
         )  # finding the edge of the field on the top
+        # fig = plt.figure()  WORKING HERE
+        # plt.imshow(ArrayDicom)
+        # plt.plot(profile_horz_inv)
+        # plt.show(block=True)
+        # exit(0)
         _, index_bot = u.find_nearest(
-            profilevert[height*10 // 2 : height*10], 0.5
+            profilevert[height // 2 : height], 0.5
         )  # finding the edge of the field on the bottom
 
         _, index_l = u.find_nearest(
-            profilehorz[0 : width*10 // 2], 0.5
-        )  # finding the edge of the field on the left
+            profilehorz[0 : width // 2], 0.5
+        )  # finding the edge of the field on the bottom
         _, index_r = u.find_nearest(
-            profilehorz[width*10 // 2 : width*10], 0.5
+            profilehorz[width // 2 : width], 0.5
         )  # finding the edge of the field on the right
 
         fig2 = plt.figure(
             figsize=(7, 5)
         )  # this figure will show the vertical and horizontal calculated field size
         ax = fig2.subplots()
-        ax.imshow(ArrayDicom, extent=extent, origin="upper",    cmap="jet_r")
+        ax.imshow(ArrayDicom, extent=extent, origin="upper")
         ax.set_xlabel("x distance [cm]")
         ax.set_ylabel("y distance [cm]")
-        ax.set_xlim(-7.5, 7.5)
-        ax.set_ylim(-7.5, 7.5)
-
-        # Change tick spacing
-        ax.xaxis.set_major_locator(MultipleLocator(2.5))
-        ax.xaxis.set_minor_locator(MultipleLocator(0.5))
-
-        ax.yaxis.set_major_locator(MultipleLocator(2.5))
-        ax.yaxis.set_minor_locator(MultipleLocator(0.5))
 
         # adding a vertical arrow
-        Vert_Field_Size = round((height*10 // 2 + index_bot - index_top)//10 * dy / 10, 2)
         ax.annotate(
-        s="",
-        xy=(
-            (0) * dx / 10,
-            (height*10 // 2 - index_top)//10 * dy / 10,
-        ),
-        xytext=(
-            (0) * dx / 10,
-            -(index_bot)//10 * dy / 10,
-        ),
-        arrowprops=dict(arrowstyle="<->", color="white", linewidth=1.5),
+            s="",
+            xy=(PROFILE["vertical"] * dx / 10, index_top * dy / 10),
+            xytext=(PROFILE["vertical"] * dx / 10, (height // 2 + index_bot) * dy / 10),
+            arrowprops=dict(arrowstyle="<->", color="r"),
         )  # example on how to plot a double headed arrow
         ax.text(
-        -(width // 2) * 0.45 * dx / 10,
-        0,
-        f"Vertical Field Size\n{Vert_Field_Size:.2f} cm",
-        rotation=90,
-        fontsize=10,
-        color="white",
-        verticalalignment="center",
-        ha="center",
+            (PROFILE["vertical"] + 10) * dx / 10,
+            (height // 2) * dy / 10,
+            "Vfs="
+            + str(round((height // 2 + index_bot - index_top) * dy / 10, 2))
+            + "cm",
+            rotation=90,
+            fontsize=14,
+            color="r",
         )
 
         # adding a horizontal arrow
         # print(index_l*dx, index_l, PROFILE['horizontal']*dy, PROFILE['horizontal'])
-        Hor_Field_Size = round((width*10 // 2 + index_r - index_l)//10 * dx / 10, 2)
         ax.annotate(
-        s="",
-        xy=(
-            (index_r)//10 * dx / 10,
-            (0) * dy / 10,
-        ),
-        xytext=(
-            (index_l - (width*10 / 2))//10 * dx / 10,
-            (0) * dy / 10,
-        ),
-        arrowprops=dict(arrowstyle="<->", color="white", linewidth=1.5),
+            s="",
+            xy=(index_l * dx / 10, PROFILE["horizontal"] * dy / 10),
+            xytext=((width // 2 + index_r) * dx / 10, PROFILE["horizontal"] * dy / 10),
+            arrowprops=dict(arrowstyle="<->", color="r"),
         )  # example on how to plot a double headed arrow
         ax.text(
-        0,
-        (height // 2) * 0.4 * dy / 10,
-        f"Horizontal Field Size\n{Hor_Field_Size:.2f} cm",
-        rotation=0,
-        fontsize=10,
-        color="white",
-        ha="center",
+            (width // 2) * dx / 10,
+            (PROFILE["horizontal"] - 10) * dy / 10,
+            "Hfs=" + str(round((width // 2 + index_r - index_l) * dx / 10, 2)) + "cm",
+            rotation=0,
+            fontsize=14,
+            color="r",
         )
 
         pdf.savefig(fig2)

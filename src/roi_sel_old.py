@@ -3,60 +3,63 @@ from PIL import Image, ImageEnhance
 from tqdm import tqdm
 from skimage.feature import blob_log
 import matplotlib.pyplot as plt
-from itertools import repeat
-from multiprocessing import Pool
 
 
 
-def point_detect(im, minSigma, maxSigma, numSigma, thres):
-    # detCenterXRegion = []
-    # detCenterYRegion = []
+def point_detect(imcirclist, minSigma, maxSigma, numSigma, thres):
+    k = 0
+    detCenterXRegion = []
+    detCenterYRegion = []
 
-    print("Finding BBs in phantom...")
-    # for img in tqdm(imcirclist):
+    print("Finding bibs in phantom...")
+    for img in tqdm(imcirclist):
         
-    # #Image pre-processing to detect low amplitude bibs
-    # img=img.convert(mode='L')
-    # #image brightness enhancer
-    # enhancer = ImageEnhance.Brightness(img)
-    # img = enhancer.enhance(3.5)
-    # img.save('img_enh_b','PNG')
-    # #image brightness enhancer
-    # enhancer = ImageEnhance.Contrast(img)
-    # img = enhancer.enhance(1.5)
-    grey_img = np.array(im, dtype=np.uint8)  # converting the image to a numpy matrix
-    
-    blobs_log = blob_log(
-        grey_img, min_sigma=minSigma, max_sigma=maxSigma, num_sigma=numSigma, threshold=thres
-    )
+        # #Image pre-processing to detect low amplitude bibs
+        # img=img.convert(mode='L')
+        # #image brightness enhancer
+        # enhancer = ImageEnhance.Brightness(img)
+        # img = enhancer.enhance(3.5)
+        # img.save('img_enh_b','PNG')
+        # #image brightness enhancer
+        # enhancer = ImageEnhance.Contrast(img)
+        # img = enhancer.enhance(1.5)
 
-    centerXRegion = []
-    centerYRegion = []
-    centerRRegion = []
-    grey_ampRegion = []
+        grey_img = np.array(img, dtype=np.uint8)  # converting the image to a numpy matrix
+        blobs_log = blob_log(
+            grey_img, min_sigma=minSigma, max_sigma=maxSigma, num_sigma=numSigma, threshold=thres
+        )
 
-    for blob in blobs_log:
-        y, x, r = blob
-        center = (int(x), int(y))
-        centerXRegion.append(x)
-        centerYRegion.append(y)
-        centerRRegion.append(r)
-        grey_ampRegion.append(grey_img[int(y), int(x)])
-        radius = int(r)
-        print('center=', center, 'radius=', radius, 'pixel_val',grey_img[int(y), int(x)])
-    
-    xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
-    yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
-    # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
-    # fig,ax = plt.subplots()
-    # ax.imshow(img)
-    # ax.scatter(xindx,yindx)
-    # plt.show(block=True)
+        centerXRegion = []
+        centerYRegion = []
+        centerRRegion = []
+        grey_ampRegion = []
+        for blob in blobs_log:
+            y, x, r = blob
+            center = (int(x), int(y))
+            centerXRegion.append(x)
+            centerYRegion.append(y)
+            centerRRegion.append(r)
+            grey_ampRegion.append(grey_img[int(y), int(x)])
+            radius = int(r)
+            print('center=', center, 'radius=', radius, 'pixel_val',grey_img[int(y), int(x)])
 
-    # detCenterXRegion.append(xindx)
-    # detCenterYRegion.append(yindx)
+        
+        xindx = int(centerXRegion[np.argmin(grey_ampRegion)])
+        yindx = int(centerYRegion[np.argmin(grey_ampRegion)])
+        # rindx = int(centerRRegion[np.argmin(grey_ampRegion)])
 
-    return [xindx, yindx]
+        # fig,ax = plt.subplots()
+        # ax.imshow(img)
+        # ax.scatter(xindx,yindx)
+        # plt.show(block=True)
+
+
+        detCenterXRegion.append(xindx)
+        detCenterYRegion.append(yindx)
+
+        k = k + 1
+
+    return detCenterXRegion, detCenterYRegion
 
 
 
@@ -745,15 +748,13 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
     maxSigma=60
     numSigma=10
     thres=0.05
-    # xdet, ydet = point_detect(imcirclist, minSigma, maxSigma, numSigma, thres)
-    with Pool(processes=4) as pool:
-        point = pool.starmap(point_detect, zip(imcirclist, repeat(minSigma), repeat(maxSigma), repeat(numSigma), repeat(thres)))
+    xdet, ydet = point_detect(imcirclist, minSigma, maxSigma, numSigma, thres)
 
     profiles = []
-    profile1 = np.array(imcirc1, dtype=np.uint8)[:, point[0][0]] / 255
-    profile2 = np.array(imcirc2, dtype=np.uint8)[point[1][1], :] / 255
-    profile3 = np.array(imcirc3, dtype=np.uint8)[:, point[2][0]] / 255
-    profile4 = np.array(imcirc4, dtype=np.uint8)[point[3][1], :] / 255
+    profile1 = np.array(imcirc1, dtype=np.uint8)[:, xdet[0]] / 255
+    profile2 = np.array(imcirc2, dtype=np.uint8)[ydet[1], :] / 255
+    profile3 = np.array(imcirc3, dtype=np.uint8)[:, xdet[2]] / 255
+    profile4 = np.array(imcirc4, dtype=np.uint8)[ydet[3], :] / 255
 
     profiles.append(profile1)
     profiles.append(profile2)
@@ -762,4 +763,4 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
 
 
 
-    return profiles, imcirclist, point, list_extent
+    return profiles, imcirclist, xdet, ydet, list_extent
