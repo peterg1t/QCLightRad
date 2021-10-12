@@ -131,15 +131,6 @@ def read_dicom(filenm):
     # processing of hot BBs
     hot_pixels, ArrayDicom = find_outlier_pixels(ArrayDicom)
 
-    # fig = plt.figure()
-    # plt.imshow(fixed_image)
-    # # plt.plot(profile_horz_inv)
-    # plt.show(block=True)
-
-    # print('max value', np.max(ArrayDicom))
-    # #where do maximum values occur
-    # print(argmax2d(ArrayDicom))
-    # print(ArrayDicom[argmax2d(ArrayDicom)[0],argmax2d(ArrayDicom)[1]])
 
 
     ArrayDicom = u.norm01(ArrayDicom)
@@ -200,6 +191,7 @@ def read_dicom(filenm):
 
     print('Writing to:',output_flnm)
 
+
     with PdfPages(
         output_flnm
     ) as pdf:
@@ -212,12 +204,14 @@ def read_dicom(filenm):
                 profile_inv = u.range_invert(profile)
                 _, index = u.find_nearest(profile_inv, 0.5)  # find the 50% amplitude point
                 # value_near, index = find_nearest(profile, 0.5) # find the 50% amplitude point
+                
                 if (  # pylint: disable = consider-using-in
                     k == 0 or k == 1 or k == 4 or k == 5
                 ):  # there are the BBs in the horizontal
                     offset_value_y = round(
                         abs((point[k][1] - index) * (dy / 10)) - phantom_distance, 2
                     )
+                    
 
                     txt = str(offset_value_y)
                     # print('offset_value_y=', offset_value_y)
@@ -593,6 +587,8 @@ def read_dicom(filenm):
             profilehorz[width*10 // 2 : width*10], 0.5
         )  # finding the edge of the field on the right
 
+
+
         fig2 = plt.figure(
             figsize=(7, 5)
         )  # this figure will show the vertical and horizontal calculated field size
@@ -613,7 +609,7 @@ def read_dicom(filenm):
         # adding a vertical arrow
         Vert_Field_Size = round((height*10 // 2 + index_bot - index_top)//10 * dy / 10, 2)
         ax.annotate(
-        s="",
+        text="",
         xy=(
             (0) * dx / 10,
             (height*10 // 2 - index_top)//10 * dy / 10,
@@ -622,7 +618,7 @@ def read_dicom(filenm):
             (0) * dx / 10,
             -(index_bot)//10 * dy / 10,
         ),
-        arrowprops=dict(arrowstyle="<->", color="white", linewidth=1.5),
+        arrowprops=dict(arrowstyle="<->", color="lime", linewidth=1.5),
         )  # example on how to plot a double headed arrow
         ax.text(
         -(width // 2) * 0.45 * dx / 10,
@@ -630,16 +626,15 @@ def read_dicom(filenm):
         f"Vertical Field Size\n{Vert_Field_Size:.2f} cm",
         rotation=90,
         fontsize=10,
-        color="white",
+        color="lime",
         verticalalignment="center",
         ha="center",
         )
 
         # adding a horizontal arrow
-        # print(index_l*dx, index_l, PROFILE['horizontal']*dy, PROFILE['horizontal'])
         Hor_Field_Size = round((width*10 // 2 + index_r - index_l)//10 * dx / 10, 2)
         ax.annotate(
-        s="",
+        text="",
         xy=(
             (index_r)//10 * dx / 10,
             (0) * dy / 10,
@@ -648,7 +643,7 @@ def read_dicom(filenm):
             (index_l - (width*10 / 2))//10 * dx / 10,
             (0) * dy / 10,
         ),
-        arrowprops=dict(arrowstyle="<->", color="white", linewidth=1.5),
+        arrowprops=dict(arrowstyle="<->", color="cyan", linewidth=1.5),
         )  # example on how to plot a double headed arrow
         ax.text(
         0,
@@ -656,9 +651,15 @@ def read_dicom(filenm):
         f"Horizontal Field Size\n{Hor_Field_Size:.2f} cm",
         rotation=0,
         fontsize=10,
-        color="white",
+        color="cyan",
         ha="center",
         )
+
+        # Adding the field edges on the image
+        ax.axhline(y=(height*10/2-index_top)* dy /100, linestyle="dashed")
+        ax.axhline(y=(-index_bot) * dy /100, linestyle="dashed")
+        ax.axvline(x=(width*10/2-index_l)/10 * dx /10, linestyle="dashed")
+        ax.axvline(x=(-index_r)/10 * dx /10, linestyle="dashed")
 
         pdf.savefig(fig2)
 

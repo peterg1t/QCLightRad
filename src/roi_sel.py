@@ -749,6 +749,9 @@ def roi_sel_GP1(ArrayDicom,ioption,dx,dy):
     with Pool(processes=4) as pool:
         point = pool.starmap(point_detect, zip(imcirclist, repeat(minSigma), repeat(maxSigma), repeat(numSigma), repeat(thres)))
 
+
+    
+
     profiles = []
     profile1 = np.array(imcirc1, dtype=np.uint8)[:, point[0][0]] / 255
     profile2 = np.array(imcirc2, dtype=np.uint8)[point[1][1], :] / 255
