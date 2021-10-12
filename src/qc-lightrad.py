@@ -655,11 +655,32 @@ def read_dicom(filenm):
         ha="center",
         )
 
+
+        print('index_l=',index_l, 'index_r=',index_r)
+        print('height=',height,'width=',width, 'height*10/2=',height*10/2, 'width*10/2=',width*10/2)
+        plt.figure()
+        plt.scatter(np.arange(len(profilehorz[0 : width*10 // 2])),profilehorz[0 : width*10 // 2])
+        plt.figure()
+        plt.scatter(np.arange(len(profilehorz[width*10 // 2 : width*10])),profilehorz[width*10 // 2 : width*10])
+        plt.show()
+
+
+
+        print('index_l=',index_l, 'index_r=',index_r)
+        print('height=',height,'width=',width, 'height*10/2=',height*10/2, 'width*10/2=',width*10/2)
+        plt.figure()
+        plt.scatter(np.arange(len(profilehorz[0 : width*10 // 2])),profilehorz[0 : width*10 // 2])
+        plt.figure()
+        plt.scatter(np.arange(len(profilehorz[width*10 // 2 : width*10])),profilehorz[width*10 // 2 : width*10])
+        plt.show()
+
         # Adding the field edges on the image
         ax.axhline(y=(height*10/2-index_top)* dy /100, linestyle="dashed")
         ax.axhline(y=(-index_bot) * dy /100, linestyle="dashed")
         ax.axvline(x=(width*10/2-index_l)/10 * dx /10, linestyle="dashed")
         ax.axvline(x=(-index_r)/10 * dx /10, linestyle="dashed")
+
+
 
         pdf.savefig(fig2)
 
